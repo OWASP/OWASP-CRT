@@ -36,19 +36,12 @@ The exact technical implementation will be defined and refined as the project pr
 ### How to Contribute
 
 Your contributions are essential to making this project a success! We are looking for help in various areas, including:
+* **Feedback & Ideas:** Share your thoughts on the proposed workflow and features.
+* **Development:** Help build the tool.
+* **Documentation:** Improve this README and create user guides.
+* **Testing:** Help us test the workflow once the MVP is available.
 
-*   **Feedback & Ideas:** Share your thoughts on the proposed workflow and features.
-*   **Development:** Help build the tool.
-*   **Documentation:** Improve this README and create user guides.
-*   **Testing:** Help us test the workflow once the MVP is available.
-
-**To get started:**
-
-1. Check the [Issues tab](https://github.com/OWASP/OWASP-Community-Recognition-Tool/issues) for open tasks or to file a new one.
-2. Fork the repository and create a new branch for your feature or bug fix.
-3. Submit a Pull Request with a clear description of your changes.
-
-A more detailed `CONTRIBUTING.md` file will be added soon.
+For detailed instructions on how to get started, the standard workflow, and how to submit a Pull Request, please read our **[CONTRIBUTING.md](CONTRIBUTING.md)** guidelines.
 
 ### Project Lead
 
