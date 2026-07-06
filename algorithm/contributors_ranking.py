@@ -5,7 +5,7 @@ import numpy as np
 with open("owasp_global_stats.json", "r", encoding="utf-8") as f:
     raw_data = json.load(f)
 
-#  Step 1: Remove bot accounts 
+#  Step 1: Remove main organization account
 raw_data = {u: v for u, v in raw_data.items() if u != "OWASPFoundation"}
 
 #  Step 2: Zero-line users → No Certificate 
