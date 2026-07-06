@@ -250,11 +250,6 @@ def build_global_contributors_db():
                             OUTPUT_FILE
                         )
 
-                        print(
-                            f"Checkpoint saved "
-                            f"({discovered_contributors} "
-                            f"contributors indexed)"
-                        )
 
                 record = contributors_db[username]
 
