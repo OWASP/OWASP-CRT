@@ -3,7 +3,7 @@ import os
 import time
 import requests
 from dotenv import load_dotenv
-import os
+
 
 load_dotenv()
 
@@ -13,13 +13,31 @@ if not GITHUB_TOKEN:
     raise ValueError(
         "GitHub token not found. Please create a .env file and set GITHUB_TOKEN."
     )
+
+
 HEADERS = {
     "Authorization": f"Bearer {GITHUB_TOKEN}",
     "Accept": "application/vnd.github.v3+json",
 }
 
+
 OWASP_REPOS_FILE = "owasp_repos.json"
 OUTPUT_FILE = "owasp_global_stats.json"
+PROCESSED_FILE = "processed_repos.txt"
+
+
+# Load previously processed repositories to allow resuming
+def get_processed_repos():
+    if os.path.exists(PROCESSED_FILE):
+        with open(PROCESSED_FILE, "r") as f:
+            return set(f.read().splitlines())
+    return set()
+
+
+# Save the processed repository to cache
+def mark_repo_processed(repo_name):
+    with open(PROCESSED_FILE, "a") as f:
+        f.write(repo_name + "\n")
 
 
 def save_database(database, output_file):
@@ -153,9 +171,17 @@ def build_global_contributors_db():
 
     print("-" * 90)
 
+    processed_repos = get_processed_repos()
+
+    session = requests.Session()
+
     for repo_index, repo in enumerate(repositories, start=1):
 
         repo_name = repo["name"]
+
+        if repo_name in processed_repos:
+            print(f"Skipping {repo_name} (Already processed)")
+            continue
 
         endpoint = (
             f"https://api.github.com/repos/"
@@ -168,7 +194,7 @@ def build_global_contributors_db():
 
         while retries_remaining > 0:
 
-            response = requests.get(
+            response = session.get(
                 endpoint,
                 headers=HEADERS
             )
@@ -189,6 +215,7 @@ def build_global_contributors_db():
                 )
 
                 time.sleep(60)
+                continue
 
             if response.status_code == 202:
 
@@ -247,13 +274,6 @@ def build_global_contributors_db():
 
                     discovered_contributors += 1
 
-                    if discovered_contributors % 10 == 0:
-
-                        save_database(
-                            contributors_db,
-                            OUTPUT_FILE
-                        )
-
 
                 record = contributors_db[username]
 
@@ -291,12 +311,14 @@ def build_global_contributors_db():
             f"Contributors: {len(contributors_db)}"
         )
 
+        mark_repo_processed(repo_name)
+
         time.sleep(0.2)
 
-    save_database(
-        contributors_db,
-        OUTPUT_FILE
-    )
+        save_database(
+            contributors_db,
+            OUTPUT_FILE
+        )
 
     print("-" * 90)
 
