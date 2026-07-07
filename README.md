@@ -43,6 +43,7 @@ Your contributions are essential to making this project a success! We are lookin
 
 For detailed instructions on how to get started, the standard workflow, and how to submit a Pull Request, please read our **[CONTRIBUTING.md](CONTRIBUTING.md)** guidelines.
 
-### Project Lead
+### Project Leaders
 
 - [Meysam Bal-afkan](http://github.com/galaxy-sc)
+- [Fatemeh Zahedi](https://github.com/dylanzahedi)
