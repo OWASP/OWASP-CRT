@@ -1,14 +1,18 @@
 import json
 import os
 import time
-
 import requests
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
-# GitHub API Configuration
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
-GITHUB_TOKEN = ""
-
+if not GITHUB_TOKEN:
+    raise ValueError(
+        "GitHub token not found. Please create a .env file and set GITHUB_TOKEN."
+    )
 HEADERS = {
     "Authorization": f"Bearer {GITHUB_TOKEN}",
     "Accept": "application/vnd.github.v3+json",
