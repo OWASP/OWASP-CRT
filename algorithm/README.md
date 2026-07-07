@@ -1,10 +1,8 @@
-# OWASP Community Recognition Tool
+# Contribution Analytics & Algorithm Engine
 
-The OWASP ecosystem consists of hundreds of repositories and thousands of contributors. While GitHub provides repository-level statistics, obtaining a broader view of community participation across the entire organization remains challenging.
+This directory contains the core data pipeline and calculation models for the OWASP Community Recognition Tool. 
 
-This project provides a data-driven framework for collecting contributor activity across OWASP repositories, analyzing participation patterns, and assigning recognition tiers based on measurable contribution metrics.
-
-The goal is to establish a transparent and reproducible contribution assessment process using publicly available GitHub data.
+While the root project overview focuses on the community aspects, this module is strictly responsible for data extraction and statistical analysis. It provides a set of Python scripts to programmatically aggregate GitHub metrics, filter outliers, and apply weighted scoring to ensure a transparent and reproducible tier assignment process.
 
 ---
 
@@ -108,8 +106,8 @@ This stage measures observable contribution activity derived from GitHub statist
 Clone the repository:
 
 ```bash
-git clone <https://github.com/OWASP/OWASP-Community-Recognition-Tool>
-cd OWASP-Community-Recognition-Tool
+git clone https://github.com/OWASP/OWASP-Community-Recognition-Tool
+cd OWASP-Community-Recognition-Tool/algorithm/
 ```
 
 Install dependencies:
@@ -133,7 +131,12 @@ cp .env.example .env
 Run the complete workflow:
 
 ```bash
+# Step 1
 python global_contributors_list.py
+
+# Step 2
 python activity_histogram.py
+
+# Step 3
 python contributors_ranking.py
 ```
