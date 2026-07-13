@@ -8,7 +8,7 @@ An automated tool to generate verifiable credentials for valued OWASP contributo
 
 ### Project Status
 
-This project is currently in the Inception phase. The core concepts and initial workflow are being defined. We welcome community feedback, ideas, and contributions during this formative stage.
+This project is currently in the Inception phase, but moving quickly. The core concepts and visual designs for the certificates have been finalized. We are now actively working on the template integration and the backend automation workflow. We welcome community feedback, ideas, and contributions during this active development stage.
 
 ### About The Project
 
@@ -33,11 +33,19 @@ The tool will integrate directly with GitHub to create a seamless and automated 
 
 The exact technical implementation will be defined and refined as the project progresses, with a primary focus on simplicity, security, and user experience.
 
+### Certificate Tiers
+
+To recognize different levels of commitment, we issue three distinct tiers of certificates:
+
+| Tier 1 (Bronze) | Tier 2 (Silver) | Tier 3 (Gold) |
+| :---: | :---: | :---: |
+| <img src="assets/certificates/tier-1.jpg" alt="Tier 1" width="100%"> | <img src="assets/certificates/tier-2.jpg" alt="Tier 2" width="100%"> | <img src="assets/certificates/tier-3.jpg" alt="Tier 3" width="100%"> |
+
 ### How to Contribute
 
 Your contributions are essential to making this project a success! We are looking for help in various areas, including:
 * **Feedback & Ideas:** Share your thoughts on the proposed workflow and features.
-* **Development:** Help build the tool.
+* **Development:** Help us build the tool! We currently need assistance with core generation workflow and setting up GitHub Actions for automation.
 * **Documentation:** Improve this README and create user guides.
 * **Testing:** Help us test the workflow once the MVP is available.
 
