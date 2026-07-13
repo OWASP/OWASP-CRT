@@ -41,6 +41,8 @@ To recognize different levels of commitment, we issue three distinct tiers of ce
 | :---: | :---: | :---: |
 | <img src="assets/certificates/tier-1.jpg" alt="Tier 1" width="100%"> | <img src="assets/certificates/tier-2.jpg" alt="Tier 2" width="100%"> | <img src="assets/certificates/tier-3.jpg" alt="Tier 3" width="100%"> |
 
+> **For Developers:** See the **[Certificate Design Specifications](assets/DESIGNSPEC.md)** for detailed dimensions, fonts, and color assets used in these templates.
+
 ### How to Contribute
 
 Your contributions are essential to making this project a success! We are looking for help in various areas, including:
