@@ -57,3 +57,7 @@ For detailed instructions on how to get started, the standard workflow, and how 
 
 - [Meysam Bal-afkan](http://github.com/galaxy-sc)
 - [Fatemeh Zahedi](https://github.com/dylanzahedi)
+
+### Design Lead
+
+- [Hamidreza Abedi nasab](https://github.com/Ham1dRz) 
