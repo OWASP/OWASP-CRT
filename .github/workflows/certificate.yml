@@ -1,0 +1,431 @@
+name: Generate Certificate
+
+on:
+  issues:
+    types: [opened]
+
+concurrency:
+  group: cert-request-${{ github.actor }}
+  cancel-in-progress: true
+
+jobs:
+  build-cert:
+    if: contains(github.event.issue.title, 'Cert Request')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write 
+    
+    steps:
+      - name: Checkout Main Repository
+        uses: actions/checkout@v4
+
+      - name: Checkout Data Branch
+        uses: actions/checkout@v4
+        with:
+          ref: data 
+          path: db_branch
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: GraphQL Deep Scan & Generate Report
+        id: generate
+        env:
+          USER_INPUT: ${{ github.actor }} 
+          USER_ID: ${{ github.actor_id }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          import urllib.request, json, os, sys, re, time, math
+          
+          user = os.environ['USER_INPUT']
+          user_id = os.environ['USER_ID']
+          issue_body = os.environ['ISSUE_BODY']
+          gh_token = os.environ['GH_TOKEN']
+          ORG_NAME = 'OWASP'
+              
+          # --- Anti-Spam & Cooldown System (Strict 24 Hours) ---
+          cooldown_seconds = 24 * 3600
+          now = time.time()
+          
+          cert_path = f"db_branch/certs/{user_id}.json"
+          attempt_path = f"db_branch/attempts/{user_id}.json"
+          
+          last_time = 0
+          
+          if os.path.exists(cert_path):
+              with open(cert_path, "r", encoding="utf-8") as f:
+                  try: last_time = max(last_time, json.load(f).get("last_issued", 0))
+                  except: pass
+                  
+          if os.path.exists(attempt_path):
+              with open(attempt_path, "r", encoding="utf-8") as f:
+                  try: last_time = max(last_time, json.load(f).get("last_attempt", 0))
+                  except: pass
+                  
+          if last_time > 0 and (now - last_time) < cooldown_seconds:
+              time_left = cooldown_seconds - (now - last_time)
+              hours_left = int(time_left / 3600)
+              mins_left = int((time_left % 3600) / 60)
+              error_msg = f"⏳ **Rate Limit Exceeded:** You have recently requested a certificate check. Please wait and try again in {hours_left} hours and {mins_left} minutes."
+              with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env_file:
+                  env_file.write(f"ERROR_MSG={error_msg}\n")
+              sys.exit(1)
+
+          # --- Security Policy: Input Validation ---
+          name_match = re.search(r'FullName:\s*([^\r\n]+)', issue_body)
+          raw_name = name_match.group(1).strip() if name_match else user
+
+          if len(raw_name) > 20:
+              with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
+                  f.write("ERROR_MSG=❌ **Input Error:** The provided name exceeds the maximum limit of 20 characters. Please re-enter a shorter name in the terminal workspace.\n")
+              sys.exit(1)
+              
+          if re.search(r'[^\w\s.\-]', raw_name):
+              with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
+                  f.write("ERROR_MSG=❌ **Input Error:** The provided name contains restricted characters. Only letters, numbers, spaces, dots, and hyphens are permitted. Please re-enter a valid name.\n")
+              sys.exit(1)
+              
+          real_name = raw_name if raw_name else user
+          # -------------------------------------------
+
+          headers = {
+              'Authorization': f'Bearer {gh_token}',
+              'Content-Type': 'application/json',
+              'User-Agent': 'OWASP-CRT-GraphQL'
+          }
+
+          def run_graphql(query, variables=None):
+              payload = json.dumps({'query': query, 'variables': variables or {}}).encode('utf-8')
+              req = urllib.request.Request('https://api.github.com/graphql', data=payload, headers=headers)
+              try:
+                  with urllib.request.urlopen(req) as response:
+                      result = json.loads(response.read().decode())
+                      if 'errors' in result:
+                          print(f"::error::GraphQL Error: {result['errors']}")
+                      return result
+              except Exception as e:
+                  print(f"::error::GraphQL Connection Error: {e}")
+                  with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
+                      f.write(f"ERROR_MSG=❌ **System Error:** We encountered an internal connection issue while checking your contributions (API Connection Failed). Please open a new issue to notify the project maintainers so they can investigate the repository's configuration.\n")
+                  sys.exit(1)
+
+          # --- Get User's GraphQL Node ID ---
+          print(f"[*] Fetching ID for user: {user}...")
+          id_query = """query($login: String!) { user(login: $login) { id } }"""
+          id_res = run_graphql(id_query, {"login": user})
+          
+          if not id_res or 'errors' in id_res or not id_res.get('data', {}).get('user'):
+              with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
+                  f.write(f"ERROR_MSG=❌ **User Not Found:** The GitHub account @{user} could not be located.\n")
+              sys.exit(1)
+              
+          graphql_author_id = id_res['data']['user']['id']
+          unique_commits = {}
+
+          # --- Phase 1: Direct Commits in Default Branch ---
+          print("[*] Phase 1: Fetching direct default branch commits...")
+          main_query = """
+          query($login: String!, $authorId: ID!) {
+            user(login: $login) {
+              repositoriesContributedTo(first: 100, contributionTypes: [COMMIT]) {
+                edges {
+                  node {
+                    name
+                    owner { login }
+                    defaultBranchRef {
+                      target {
+                        ... on Commit {
+                          history(author: { id: $authorId }, first: 100) {
+                            edges {
+                              node { oid message additions deletions committedDate }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          """
+          data_res = run_graphql(main_query, {"login": user, "authorId": graphql_author_id})
+          contributed_repos = data_res.get('data', {}).get('user', {}).get('repositoriesContributedTo', {}).get('edges', [])
+          
+          for repo_edge in contributed_repos:
+              repo_node = repo_edge.get('node', {})
+              repo_owner = repo_node.get('owner', {}).get('login', '')
+              repo_name = f"{repo_owner}/{repo_node.get('name', '')}"
+              
+              if repo_owner.upper() != ORG_NAME: continue
+                  
+              branch_ref = repo_node.get('defaultBranchRef')
+              if not branch_ref: continue
+                  
+              commit_history = branch_ref.get('target', {}).get('history', {}).get('edges', [])
+              for commit_edge in commit_history:
+                  c = commit_edge['node']
+                  sha = c['oid']
+                  unique_commits[sha] = {
+                      'repo': repo_name,
+                      'added': c['additions'],
+                      'removed': c['deletions'],
+                      'date': c['committedDate'],
+                      'type': 'Direct'
+                  }
+
+          # --- Phase 2: Collaborative PRs (Squashed / Co-authored) ---
+          print("[*] Phase 2: Fetching valid PR merge commits (Co-authored)...")
+          pr_query = """
+          query($searchQuery: String!) {
+            search(query: $searchQuery, type: ISSUE, first: 100) {
+              edges {
+                node {
+                  ... on PullRequest {
+                    repository { nameWithOwner owner { login } }
+                    mergeCommit {
+                      oid additions deletions committedDate
+                      authors(first: 10) {
+                        edges {
+                          node {
+                            user { login }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          """
+          search_str = f"is:pr is:merged involves:{user} org:{ORG_NAME}"
+          pr_res = run_graphql(pr_query, {"searchQuery": search_str})
+          
+          pr_edges = pr_res.get('data', {}).get('search', {}).get('edges', [])
+          for pr_edge in pr_edges:
+              pr_node = pr_edge.get('node', {})
+              if not pr_node or not pr_node.get('repository'): continue
+              
+              repo_owner = pr_node['repository']['owner']['login']
+              if repo_owner.upper() != ORG_NAME: continue
+              
+              repo_name = pr_node['repository']['nameWithOwner']
+              merge_commit = pr_node.get('mergeCommit')
+              
+              if not merge_commit: continue
+                  
+              sha = merge_commit['oid']
+              
+              is_author = False
+              authors_edges = merge_commit.get('authors', {}).get('edges', [])
+              for a_edge in authors_edges:
+                  a_user = a_edge.get('node', {}).get('user', {})
+                  if a_user and a_user.get('login', '').lower() == user.lower():
+                      is_author = True
+                      break
+                      
+              if is_author and sha not in unique_commits:
+                  unique_commits[sha] = {
+                      'repo': repo_name,
+                      'added': merge_commit['additions'],
+                      'removed': merge_commit['deletions'],
+                      'date': merge_commit['committedDate'],
+                      'type': 'PR'
+                  }
+
+          # --- Process Gathered Data ---
+          total_commits = len(unique_commits)
+          
+          # IF USER HAS 0 COMMITS -> Put them in the 'attempts' cooldown file
+          if total_commits == 0:
+              os.makedirs("db_branch/attempts", exist_ok=True)
+              with open(attempt_path, "w", encoding="utf-8") as f:
+                  json.dump({"last_attempt": now}, f)
+              
+              with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
+                  f.write(f"ERROR_MSG=⚠️ **Contribution Check:** No verified commits or co-authored contributions from @{user} were found in the default branch of public OWASP projects. If you recently contributed, please ensure your contributions are successfully merged.\n")
+              sys.exit(1)
+
+          total_added = sum(c['added'] for c in unique_commits.values())
+          total_removed = sum(c['removed'] for c in unique_commits.values())
+          
+          raw_total = total_added + total_removed
+
+          first_commit_date = min(c['date'] for c in unique_commits.values())
+          first_commit_display = first_commit_date.split('T')[0] if first_commit_date else "N/A"
+
+          # --- Algorithm & Tier Calculation ---
+          P99_ADD = 290764.32000000024
+          P99_DEL = 130211.56000000004
+          P99_CMT = 536.5200000000004
+          OUTLIER_UPPER = 17.980652793952775
+
+          SILVER_THRESHOLD = 0.000818
+          GOLD_THRESHOLD = 0.006063
+
+          log_raw = math.log1p(raw_total)
+          
+          if log_raw > OUTLIER_UPPER:
+              tier = "Gold"
+              final_score = "Exceptional"
+          else:
+              add_norm = min(total_added / P99_ADD, 1.0) if P99_ADD > 0 else 0
+              del_norm = min(total_removed / P99_DEL, 1.0) if P99_DEL > 0 else 0
+              cmt_norm = min(total_commits / P99_CMT, 1.0) if P99_CMT > 0 else 0
+              
+              score = (add_norm * 0.50) + (del_norm * 0.40) + (cmt_norm * 0.10)
+              final_score = f"{score:.6f}"
+              
+              if score >= GOLD_THRESHOLD: tier = "Gold"
+              elif score >= SILVER_THRESHOLD: tier = "Silver"
+              else: tier = "Bronze"
+
+          # --- Generate Summary Report ---
+          repo_stats = {}
+          for sha, data in unique_commits.items():
+              r_name = data['repo']
+              if r_name not in repo_stats:
+                  repo_stats[r_name] = {'commits': 0, 'added': 0, 'removed': 0}
+                  
+              repo_stats[r_name]['commits'] += 1
+              repo_stats[r_name]['added'] += data['added']
+              repo_stats[r_name]['removed'] += data['removed']
+
+          total_projects = len(repo_stats)
+
+          report = "#### 📊 Contribution Summary\n"
+          report += f"> **Total:** {total_commits} valid commits across {total_projects} projects\n"
+          report += f"> **Impact:** +{total_added} lines added / -{total_removed} lines removed\n"
+          report += f"> **Calculated Score:** `{final_score}`\n\n"
+          
+          report += "**Breakdown by Project:**\n"
+          for repo, stats in repo_stats.items():
+              report += f"- **[{repo}](https://github.com/{repo})**: {stats['commits']} commits (+{stats['added']} / -{stats['removed']})\n"
+
+          # Clean up attempt file since the user was successful
+          if os.path.exists(attempt_path):
+              try: os.remove(attempt_path)
+              except: pass
+
+          # --- Save to Database ---
+          cert_id = user_id
+          
+          payload = {
+              "id": cert_id,
+              "user": user, 
+              "real_name": real_name, 
+              "tier": tier,
+              "score": final_score,
+              "last_issued": int(now),
+              "stats": {
+                  "first_commit_date": first_commit_display,
+                  "merged_commits": str(total_commits),
+                  "project_count": str(total_projects),
+                  "lines_added": str(total_added), 
+                  "lines_removed": str(total_removed)
+              }
+          }
+          
+          os.makedirs("db_branch/certs", exist_ok=True)
+          file_path = f"db_branch/certs/{cert_id}.json"
+          with open(file_path, "w", encoding="utf-8") as f:
+              json.dump(payload, f, ensure_ascii=False, indent=2)
+          
+          final_url = f"https://{os.environ['REPO_OWNER']}.github.io/{os.environ['REPO_NAME']}/?id={cert_id}"
+          
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
+              f.write(f"CERT_URL={final_url}\n")
+              f.write(f"TIER={tier}\n")
+              f.write(f"REAL_NAME={real_name}\n")
+              f.write(f"CERT_ID={cert_id}\n")
+              f.write(f"FIRST_COMMIT={first_commit_display}\n")
+              f.write("LOG_REPORT<<EOF\n")
+              f.write(report)
+              f.write("\nEOF\n")
+        shell: python
+
+      - name: Commit and Push Records to Data Branch
+        if: always()
+        run: |
+          if [ -d "db_branch" ]; then
+            cd db_branch
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            mkdir -p attempts certs
+            git add -A attempts/ certs/ 2>/dev/null || true
+
+            if git diff --staged --quiet; then
+              echo "[*] No changes to commit."
+              exit 0
+            fi
+
+            git commit -m "db(sys): update records for @${{ github.actor }} [skip ci]"
+
+            max_attempts=5
+            attempt=1
+            pushed=false
+
+            while [ $attempt -le $max_attempts ]; do
+              echo "[*] Push attempt $attempt/$max_attempts..."
+
+              if git push origin data; then
+                pushed=true
+                break
+              fi
+
+              echo "[*] Push rejected, fetching + rebasing onto latest data branch..."
+              git fetch origin data
+
+              if ! git rebase origin/data; then
+                echo "::error::Rebase conflict while saving certificate record."
+                git rebase --abort
+                break
+              fi
+
+              sleep $((RANDOM % 5 + 1))
+              attempt=$((attempt + 1))
+            done
+
+            if [ "$pushed" = false ]; then
+              echo "::error::Failed to push certificate record to data branch after $max_attempts attempts."
+              if ! grep -q '^ERROR_MSG=' "$GITHUB_ENV" 2>/dev/null; then
+                echo "ERROR_MSG=⚠️ **System Notice:** Your certificate score was processed, but we encountered a temporary infrastructure update delay. Please rerun the operation inside your terminal workspace dashboard in a few minutes." >> "$GITHUB_ENV"
+              fi
+              exit 1
+            fi
+          fi
+
+      - name: Comment Success & Close Issue
+        if: success() && env.CERT_URL != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment $ISSUE --body "### 🎉 Congratulations! Your certificate has been successfully issued.
+          **Registered Name:** $REAL_NAME
+          **Unique ID:** \`$CERT_ID\`
+          **First Contribution:** $FIRST_COMMIT
+          **Achieved Tier:** $TIER
+          
+          🔗 [**View and Download Your Certificate**]($CERT_URL)
+          
+          ---
+          $LOG_REPORT"
+          gh issue close $ISSUE --reason "completed"
+
+      - name: Comment Failure & Close Issue
+        if: failure() && env.ERROR_MSG != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment $ISSUE --body "$ERROR_MSG"
+          gh issue close $ISSUE --reason "not planned"
