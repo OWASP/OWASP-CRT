@@ -338,7 +338,7 @@ jobs:
           with open(file_path, "w", encoding="utf-8") as f:
               json.dump(payload, f, ensure_ascii=False, indent=2)
           
-          final_url = f"https://{os.environ['REPO_OWNER']}.github.io/{os.environ['REPO_NAME']}/?id={cert_id}"
+          final_url = f"https://owasp.org/{os.environ['REPO_NAME']}/?id={cert_id}"
           
           with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as f:
               f.write(f"CERT_URL={final_url}\n")
