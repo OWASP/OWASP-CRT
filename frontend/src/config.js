@@ -6,7 +6,7 @@ export const APP_CONFIG = {
     workflowId: "certificate.yml"
   },
   worker: {
-    baseUrl: "https://proxy.owasp-crt.workers.dev/"
+    baseUrl: "https://proxy.owasp-crt.workers.dev"
   },
   domain: "https://crt.owasp.org",
   assetsPath: "/assets", // Assets load from root due to custom domain
