@@ -8,7 +8,6 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
     tierText: 'System scanning for parameters...', nextTier: 'AWAITING IDENTITY',
     tierColor: '#4a7bfe', nextColor: '#9d4edd'
   });
-
   const [isTouchMode, setIsTouchMode] = useState(false);
 
   useEffect(() => {
@@ -65,11 +64,13 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
       alert("[!] SYSTEM ERROR: No valid identity parameter (?id=) found. Access Denied.");
       return;
     }
+
     const canvas = document.getElementById('cert-canvas');
     if (!canvas) {
       alert("[!] SYSTEM ERROR: Certificate matrix is not loaded. Please open Identity Viewer first.");
       return;
     }
+
     try {
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdf = new jsPDF({
@@ -77,12 +78,51 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
         unit: 'mm',
         format: 'a4'
       });
+
       pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
       pdf.save(`OWASP_CRT_Certificate_${certId}.pdf`);
     } catch (err) {
       console.error(err);
       alert("[!] ERROR: Failed to compile PDF sequence.");
     }
+  };
+
+  const handleAddToLinkedIn = () => {
+    if (!certId) {
+      alert("[!] SYSTEM ERROR: Cannot add to LinkedIn without a valid identity.");
+      return;
+    }
+
+    // 1. Set certificate name based on user Tier
+    const tier = (telemetryData?.tier || "Bronze").toUpperCase();
+    let certName = "OWASP Verified Contributor";
+    if (tier === 'SILVER') certName = "OWASP Advanced Contributor";
+    if (tier === 'GOLD') certName = "OWASP Elite Contributor";
+
+    // 2. Official organization name
+    const organizationName = "OWASP® Foundation";
+    
+    // 3. Read exact date from telemetry data
+    let issueYear = new Date().getFullYear();
+    let issueMonth = new Date().getMonth() + 1;
+
+    if (telemetryData?.stats?.first_commit_date) {
+      const dateParts = telemetryData.stats.first_commit_date.split('-');
+      if (dateParts.length >= 2) {
+        issueYear = parseInt(dateParts[0], 10);
+        issueMonth = parseInt(dateParts[1], 10);
+      }
+    } else if (telemetryData?.stats?.first_commit) { 
+      issueYear = parseInt(telemetryData.stats.first_commit, 10);
+      issueMonth = 1;
+    }
+
+    const certUrl = `https://crt.owasp.org/?id=${certId}`;
+
+    // Compile final LinkedIn URL
+    const linkedInUrl = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(certName)}&organizationName=${encodeURIComponent(organizationName)}&issueYear=${issueYear}&issueMonth=${issueMonth}&certUrl=${encodeURIComponent(certUrl)}&certId=${encodeURIComponent(certId)}`;
+    
+    window.open(linkedInUrl, '_blank');
   };
 
   const handleIconClick = (action) => {
@@ -166,11 +206,11 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
           <div className="flex items-end gap-[2px] h-[20px] mt-2 px-0.5">
             {[4, 5, 6, 8, 11, 15, 20, 26, 33, 41, 50, 60, 71, 83, 96, 100].map((h, i) => (
               <div 
-                key={i} 
-                className="flex-1 bg-emerald-400 rounded-t-[1px] transition-all duration-700 ease-out" 
-                style={{ 
-                  height: h <= tData.bars.added ? `${h}%` : '10%', 
-                  opacity: h <= tData.bars.added ? (h > 40 ? 1 : 0.3) : 0.1 
+                key={i}
+                className="flex-1 bg-emerald-400 rounded-t-[1px] transition-all duration-700 ease-out"
+                style={{
+                  height: h <= tData.bars.added ? `${h}%` : '10%',
+                  opacity: h <= tData.bars.added ? (h > 40 ? 1 : 0.3) : 0.1
                 }}
               ></div>
             ))}
@@ -195,11 +235,11 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
           <div className="flex items-start gap-[2px] h-[20px] mt-2 px-0.5">
             {[4, 5, 6, 8, 11, 15, 20, 26, 33, 41, 50, 60, 71, 83, 96, 100].map((h, i) => (
               <div 
-                key={i} 
-                className="flex-1 bg-rose-400 rounded-b-[1px] transition-all duration-700 ease-out" 
-                style={{ 
-                  height: h <= tData.bars.removed ? `${h}%` : '10%', 
-                  opacity: h <= tData.bars.removed ? (h > 40 ? 1 : 0.3) : 0.1 
+                key={i}
+                className="flex-1 bg-rose-400 rounded-b-[1px] transition-all duration-700 ease-out"
+                style={{
+                  height: h <= tData.bars.removed ? `${h}%` : '10%',
+                  opacity: h <= tData.bars.removed ? (h > 40 ? 1 : 0.3) : 0.1
                 }}
               ></div>
             ))}
@@ -210,7 +250,7 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
           <div className="flex justify-between items-center mb-3.5">
             <div className="flex items-center gap-2.5">
               <div 
-                className="w-8 h-8 rounded-[6px] border flex items-center justify-center shrink-0 transition-all duration-1000" 
+                className="w-8 h-8 rounded-[6px] border flex items-center justify-center shrink-0 transition-all duration-1000"
                 style={{ borderColor: `${tData.nextColor}40`, backgroundColor: `${tData.nextColor}10`, color: tData.nextColor }}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v8l9-11h-7z" /></svg>
@@ -229,9 +269,9 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
           
           <div className="w-full h-[8px] bg-black/60 rounded-full overflow-hidden border border-white/5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
             <div 
-              className="h-full rounded-full transition-all duration-[2000ms] ease-[cubic-bezier(0.1,0.5,0.2,1)] relative" 
-              style={{ 
-                background: `linear-gradient(90deg, ${tData.tierColor}, ${tData.nextColor})`, 
+              className="h-full rounded-full transition-all duration-[2000ms] ease-[cubic-bezier(0.1,0.5,0.2,1)] relative"
+              style={{
+                background: `linear-gradient(90deg, ${tData.tierColor}, ${tData.nextColor})`,
                 width: tData.bars.tier,
                 boxShadow: `0 0 8px ${tData.nextColor}40`
               }}
@@ -309,6 +349,24 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
             </svg>
             <span className="text-[11px] text-slate-200 drop-shadow-[0_2px_4px_#000] font-['Fira_Code',monospace] block leading-[1.4]">
               Export_PDF<br />.exe
+            </span>
+          </div>
+        </div>
+
+        <div className="relative w-[90px] inline-block">
+          <div 
+            className={`w-full text-center cursor-pointer p-3 rounded-[8px] transition-all duration-200 border border-transparent relative z-10 hover:bg-[#0077b5]/15 hover:border-[#0077b5]/30 group ${!certId ? 'opacity-50 grayscale' : ''}`}
+            onClick={() => handleIconClick(handleAddToLinkedIn)}
+            onDoubleClick={() => handleIconDoubleClick(handleAddToLinkedIn)}
+            title={!certId ? "Requires valid ?id= parameter" : "Add this certificate to your LinkedIn profile"}
+          >
+            <svg className={`w-[42px] h-[42px] mx-auto mb-2.5 stroke-[1.2] fill-none transition-all duration-300 ${!certId ? 'stroke-slate-600' : 'stroke-[#0077b5] drop-shadow-[0_0_8px_rgba(0,119,181,0.5)] group-hover:stroke-[#00a0dc] group-hover:drop-shadow-[0_0_12px_rgba(0,160,220,0.7)]'}`} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+              <rect x="2" y="9" width="4" height="12"></rect>
+              <circle cx="4" cy="4" r="2"></circle>
+            </svg>
+            <span className="text-[11px] text-slate-200 drop-shadow-[0_2px_4px_#000] font-['Fira_Code',monospace] block leading-[1.4]">
+              Add_to_<br />LinkedIn
             </span>
           </div>
         </div>

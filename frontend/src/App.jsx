@@ -15,7 +15,6 @@ const App = () => {
   const [tutorialStep, setTutorialStep] = useState(1);
   const [telemetryData, setTelemetryData] = useState(null);
   const [openedOnce, setOpenedOnce] = useState({ letter: false, tool: false });
-
   const [windows, setWindows] = useState({
     guide: { isOpen: false, isActive: false, isMaximized: false, zIndex: 100, title: 'cat ~/docs/System_Guide.txt', top: '15%', left: '30%', width: '550px', height: '400px' },
     letter: { isOpen: false, isActive: false, isMaximized: false, zIndex: 100, title: 'vi ~/desktop/Letter_of_Appreciation.txt', top: '25%', left: '20%', width: '550px', height: '350px' },
@@ -26,10 +25,11 @@ const App = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
-    
+    const status = params.get('status');
+
     if (id) {
       setCertTargetId(id);
-      setTutorialStep(0); 
+      setTutorialStep(0);
       setWindows(prev => {
         const newState = { ...prev };
         Object.keys(newState).forEach(key => newState[key].isActive = false);
@@ -37,6 +37,8 @@ const App = () => {
         return newState;
       });
       setHighestZ(1000);
+    } else if (status === 'success' || status === 'error') {
+      setTimeout(() => { toggleWindow('tool', true); }, 100);
     } else {
       setTimeout(() => { toggleWindow('guide', true); }, 100);
     }
@@ -72,7 +74,7 @@ const App = () => {
     if (overviewMode) setOverviewMode(false);
     if (id === 'letter' && !openedOnce.letter) setOpenedOnce(p => ({ ...p, letter: true }));
     if (id === 'tool' && !openedOnce.tool) setOpenedOnce(p => ({ ...p, tool: true }));
-
+    
     setWindows(prev => {
       const isCurrentlyOpen = prev[id].isOpen;
       const shouldOpen = forceOpen || !isCurrentlyOpen || !prev[id].isActive;
@@ -104,7 +106,7 @@ const App = () => {
 
   const advanceTutorial = (step) => {
     if (step === 2 && tutorialStep === 1) {
-      setTutorialStep(1.5); 
+      setTutorialStep(1.5);
       setTimeout(() => setTutorialStep(2), 2000);
     } else if (step === 3 && tutorialStep === 2) {
       setTutorialStep(3);

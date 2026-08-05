@@ -8,7 +8,6 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchedId, setFetchedId] = useState(null);
-  
   const [showHint, setShowHint] = useState(true);
   const [previewImage, setPreviewImage] = useState(null);
   const images = useRef({
@@ -38,18 +37,48 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
       setPreviewImage(null);
       
       try {
-        const rawUrl = `https://raw.githubusercontent.com/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/${APP_CONFIG.github.branch}/certs/${certId}.json`;
-        
-        const response = await fetch(rawUrl);
-        
-        if (!response.ok) {
-          if(response.status === 404) throw new Error("IDENTITY_NOT_FOUND");
-          throw new Error("SERVER_ERROR");
+        const urlParams = new URLSearchParams(window.location.search);
+        const isFresh = urlParams.get('fresh') === 'true';
+        let data = null;
+
+        if (isFresh) {
+          // Attempt to fetch directly from GitHub API (cache-free)
+          try {
+            // Append timestamp to prevent caching across intermediary layers
+            const apiUrl = `https://api.github.com/repos/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/contents/certs/${certId}.json?ref=${APP_CONFIG.github.branch}&t=${new Date().getTime()}`;
+            const apiResponse = await fetch(apiUrl);
+            
+            if (apiResponse.ok) {
+              const apiJson = await apiResponse.json();
+              // Safely decode Base64 content with UTF-8 support
+              const decodedContent = decodeURIComponent(escape(atob(apiJson.content)));
+              data = JSON.parse(decodedContent);
+              
+              // Remove 'fresh' parameter from URL without triggering a page reload
+              // Prevents API rate-limiting if the user copies and shares the link
+              window.history.replaceState(null, '', `?id=${certId}`);
+            }
+          } catch (apiErr) {
+            console.warn("GitHub API failed or rate limited, falling back to raw CDN...", apiErr);
+            // Fallback to CDN will trigger automatically if data remains null
+          }
         }
-        
-        const data = await response.json();
+
+        // Fall back to high-speed CDN if API was skipped or failed
+        if (!data) {
+          const rawUrl = `https://raw.githubusercontent.com/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/${APP_CONFIG.github.branch}/certs/${certId}.json?t=${new Date().getTime()}`;
+          const rawResponse = await fetch(rawUrl);
+          
+          if (!rawResponse.ok) {
+            if(rawResponse.status === 404) throw new Error("IDENTITY_NOT_FOUND");
+            throw new Error("SERVER_ERROR");
+          }
+          data = await rawResponse.json();
+        }
+
         setCertUser(data);
         if(setTelemetryData) setTelemetryData({ tier: data.tier, stats: data.stats || {} });
+
       } catch (e) {
         console.error("Fetch Error: ", e);
         setError(e.message);
@@ -68,7 +97,6 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
     if (!certUser || !canvasRef.current || activeError) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-
     images.current.logo.src = `${APP_CONFIG.assetsPath}/owasp-logo.svg`;
     images.current.sign.src = `${APP_CONFIG.assetsPath}/sign.svg`;
     
@@ -143,7 +171,7 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
       
       const startX = 190;
       const startY = 3000;
-
+      
       const isFinder = (row, col) => {
         if (row < 7 && col < 7) return true; 
         if (row < 7 && col >= cells - 7) return true; 
@@ -172,8 +200,8 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
         let rMid = 1.5 * cs; 
         let rIn = 0.8 * cs;  
         let sh = 0.3 * cs;   
+        
         let radiiOut, radiiMid, radiiIn;
-
         if (type === 'TL') {
           radiiOut = [rOut, rOut, sh, rOut];
           radiiMid = [rMid, rMid, sh, rMid];
@@ -201,17 +229,14 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
            ctx.fill();
         };
 
-        ctx.fillStyle = color;            
-        drawPoly(radiiOut, 7, 0);
-        ctx.fillStyle = "#171c24";        
-        drawPoly(radiiMid, 5, 1);
-        ctx.fillStyle = color;            
-        drawPoly(radiiIn, 3, 2);
+        ctx.fillStyle = color;             drawPoly(radiiOut, 7, 0);
+        ctx.fillStyle = "#171c24";         drawPoly(radiiMid, 5, 1);
+        ctx.fillStyle = color;             drawPoly(radiiIn, 3, 2);
       };
 
-      drawFinder(0, 0, 'TL');          
-      drawFinder(cells - 7, 0, 'TR');  
-      drawFinder(0, cells - 7, 'BL');  
+      drawFinder(0, 0, 'TL');        
+      drawFinder(cells - 7, 0, 'TR');
+      drawFinder(0, cells - 7, 'BL');
 
       const centerX = startX + size / 2;
       const centerY = startY + size / 2;
@@ -297,7 +322,7 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
         ctx.rect(460, 1000, 1070, 120);
       }
       ctx.stroke();
-      ctx.globalAlpha = 0.1; ctx.fill(); ctx.globalAlpha = 1; 
+      ctx.globalAlpha = 0.1; ctx.fill(); ctx.globalAlpha = 1;
       
       ctx.font = "70px Ebrima";
       let certYear = new Date().getFullYear();
@@ -310,11 +335,11 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
       const nameMaxWidth = 2100;
       const nameFontSize = getResponsiveFontSize(ctx, displayName, "Impact", 260, nameMaxWidth);
       ctx.font = `${nameFontSize}px Impact`;
-      ctx.fillText(displayName, 190, 1680); 
+      ctx.fillText(displayName, 190, 1680);
       
       ctx.font = "italic 70px Corbel";
       const projectCount = certUser.stats?.project_count || 1;
-      ctx.fillText(`${projectCount} ${projectCount === 1 ? 'Repository' : 'Repositories'}`, 190, dynamicRepoY); 
+      ctx.fillText(`${projectCount} ${projectCount === 1 ? 'Repository' : 'Repositories'}`, 190, dynamicRepoY);
       
       ctx.font = "Bold 90px Ebrima"; ctx.fillText("Meysam Bal-afkan", 190, 2850); ctx.fillText("Fatemeh Zahedi", 1510, 2850);
       ctx.font = "50px Corbel"; ctx.fillText("OWASP-CRT Project Leader", 190, 2930); ctx.fillText("OWASP-CRT Project Co-Leader", 1510, 2930);
@@ -324,8 +349,8 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
       ctx.fillStyle = "white"; 
       ctx.font = "bold 200px 'Cascadia Mono', monospace"; ctx.fillText("CERTIFICATE", 330, 800);
       ctx.font = "200 100px 'Cascadia Code', monospace"; ctx.fillText("OF CONTRIBUTION", 550, 900);
-      ctx.font = "200 70px Corbel"; ctx.fillText("PRESENTED TO", 640, 1400); 
-
+      ctx.font = "200 70px Corbel"; ctx.fillText("PRESENTED TO", 640, 1400);
+      
       let tierTitleLeft = "";
       let tierTitleRight = "";
       switch (currentTier) {
@@ -351,7 +376,6 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
       ctx.fillStyle = "white";
       ctx.font = "300 75px Corbel"; 
       drawJustifiedText(ctx, certText, 190, startY, 2100, lineHeight);
-
       if (images.current.logo.complete) {
         const tempCanvas = document.createElement('canvas');
         const tWidth = images.current.logo.naturalWidth || 483;
@@ -381,7 +405,6 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
         renderCertificate();
       }
     };
-
     if (images.current.logo.complete) checkReady(); else images.current.logo.onload = checkReady;
     if (images.current.sign.complete) checkReady(); else images.current.sign.onload = checkReady;
     if (images.current.pattern.complete) checkReady(); else images.current.pattern.onload = checkReady;
@@ -419,7 +442,7 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
             {isMaximized ? "HINT: MINIMIZE" : "HINT: MAXIMIZE"}
           </div>
           <div className="text-[11px] leading-relaxed text-slate-300">
-            {isMaximized
+            {isMaximized 
               ? "Click the GREEN button to minimize this window."
               : "Click the GREEN button to maximize this window."}
           </div>
