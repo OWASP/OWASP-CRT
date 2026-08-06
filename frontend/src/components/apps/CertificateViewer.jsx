@@ -44,23 +44,20 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
         if (isFresh) {
           // Attempt to fetch directly from GitHub API (cache-free)
           try {
-            // Append timestamp to prevent caching across intermediary layers
             const apiUrl = `https://api.github.com/repos/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/contents/certs/${certId}.json?ref=${APP_CONFIG.github.branch}&t=${new Date().getTime()}`;
             const apiResponse = await fetch(apiUrl);
             
             if (apiResponse.ok) {
               const apiJson = await apiResponse.json();
-              // Safely decode Base64 content with UTF-8 support
               const decodedContent = decodeURIComponent(escape(atob(apiJson.content)));
               data = JSON.parse(decodedContent);
-              
+
               // Remove 'fresh' parameter from URL without triggering a page reload
               // Prevents API rate-limiting if the user copies and shares the link
               window.history.replaceState(null, '', `?id=${certId}`);
             }
           } catch (apiErr) {
             console.warn("GitHub API failed or rate limited, falling back to raw CDN...", apiErr);
-            // Fallback to CDN will trigger automatically if data remains null
           }
         }
 
@@ -262,7 +259,7 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
     };
 
     const getResponsiveFontSize = (ctx, text, fontFamily, maxFontSize, maxWidth, minFontSize = 120) => {
-      ctx.font = `${maxFontSize}px ${fontFamily}`;
+      ctx.font = `400 ${maxFontSize}px '${fontFamily}'`;
       const textWidth = ctx.measureText(text).width;
       if (textWidth <= maxWidth) return maxFontSize;
       const scaledSize = Math.floor(maxFontSize * (maxWidth / textWidth));
@@ -286,10 +283,10 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
           break;
       }
       
-      ctx.font = "300 75px Corbel"; 
+      ctx.font = "200 55px 'Inter'"; 
       const textLines = calculateLines(ctx, certText, 2100);
       const startY = 1840;
-      const lineHeight = 110;
+      const lineHeight = 95;
       const paddingBottom = 10;
       const dynamicRepoY = startY + (textLines * lineHeight) + paddingBottom;
       
@@ -315,41 +312,52 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
       ctx.fillStyle = g;
       ctx.strokeStyle = g;
       ctx.lineWidth = 4;
-      ctx.beginPath(); 
-      if (ctx.roundRect) {
-        ctx.roundRect(460, 1000, 1070, 120, [100]); 
-      } else {
-        ctx.rect(460, 1000, 1070, 120);
-      }
+      
+      ctx.beginPath();
+      const radius = 60;
+      const bx = 460, by = 1000, bw = 1070, bh = 120;
+      
+      ctx.moveTo(bx + radius, by);
+      ctx.lineTo(bx + bw - radius, by);
+      ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + radius);
+      ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - radius, by + bh);
+      ctx.lineTo(bx + radius, by + bh);
+      ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - radius);
+      ctx.quadraticCurveTo(bx, by, bx + radius, by);
+      ctx.closePath();
+      
       ctx.stroke();
       ctx.globalAlpha = 0.1; ctx.fill(); ctx.globalAlpha = 1;
       
-      ctx.font = "70px Ebrima";
+      ctx.font = "400 65px 'Inter'";
       let certYear = new Date().getFullYear();
       if (certUser.stats?.first_commit_date) certYear = certUser.stats.first_commit_date.split('-')[0];
       else if (certUser.first_commit) certYear = certUser.first_commit;
       const certIdText = `CRT-OWASP-${certUser.id || "000"} : ${certYear}`;
-      ctx.fillText(certIdText, 460 + (1070 - ctx.measureText(certIdText).width) / 2, 1085);
+      const idWidth = ctx.measureText(certIdText).width;
+      ctx.fillText(certIdText, bx + (bw - idWidth) / 2, 1082);
       
       const displayName = certUser.real_name ? capitalizeRegex(certUser.real_name) : (certUser.user || "UNKNOWN");
       const nameMaxWidth = 2100;
-      const nameFontSize = getResponsiveFontSize(ctx, displayName, "Impact", 260, nameMaxWidth);
-      ctx.font = `${nameFontSize}px Impact`;
+      const nameFontSize = getResponsiveFontSize(ctx, displayName, "Anton", 260, nameMaxWidth);
+      ctx.font = `400 ${nameFontSize}px 'Anton'`;
       ctx.fillText(displayName, 190, 1680);
       
-      ctx.font = "italic 70px Corbel";
+      ctx.font = "italic 400 70px 'Inter'";
       const projectCount = certUser.stats?.project_count || 1;
       ctx.fillText(`${projectCount} ${projectCount === 1 ? 'Repository' : 'Repositories'}`, 190, dynamicRepoY);
       
-      ctx.font = "Bold 90px Ebrima"; ctx.fillText("Meysam Bal-afkan", 190, 2850); ctx.fillText("Fatemeh Zahedi", 1510, 2850);
-      ctx.font = "50px Corbel"; ctx.fillText("OWASP-CRT Project Leader", 190, 2930); ctx.fillText("OWASP-CRT Project Co-Leader", 1510, 2930);
+      ctx.font = "bold 90px 'Montserrat'"; ctx.fillText("Meysam Bal-afkan", 190, 2850); ctx.fillText("Fatemeh Zahedi", 1510, 2850);
+      ctx.font = "400 50px 'Inter'"; ctx.fillText("OWASP-CRT Project Leader", 190, 2930); ctx.fillText("OWASP-CRT Project Co-Leader", 1510, 2930);
       
       generateQRCodeAdvanced({ color: g });
       
       ctx.fillStyle = "white"; 
       ctx.font = "bold 200px 'Cascadia Mono', monospace"; ctx.fillText("CERTIFICATE", 330, 800);
-      ctx.font = "200 100px 'Cascadia Code', monospace"; ctx.fillText("OF CONTRIBUTION", 550, 900);
-      ctx.font = "200 70px Corbel"; ctx.fillText("PRESENTED TO", 640, 1400);
+      
+      ctx.font = "400 100px 'Cascadia Code', monospace"; ctx.fillText("OF CONTRIBUTION", 550, 900);
+      
+      ctx.font = "300 70px 'Inter'"; ctx.fillText("PRESENTED TO", 640, 1400);
       
       let tierTitleLeft = "";
       let tierTitleRight = "";
@@ -370,12 +378,14 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
       }
       
       ctx.fillStyle = g; 
-      ctx.font = "70px Ebrima";
-      ctx.fillText(`${tierTitleLeft}   ${tierTitleRight}`, 190, 1250);
       
-      ctx.fillStyle = "white";
-      ctx.font = "300 75px Corbel"; 
+      ctx.font = "400 62px 'Inter'";
+      ctx.fillText(`${tierTitleLeft}      ${tierTitleRight}`, 190, 1250);
+      
+      ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+      ctx.font = "200 62px 'Inter'"; 
       drawJustifiedText(ctx, certText, 190, startY, 2100, lineHeight);
+      
       if (images.current.logo.complete) {
         const tempCanvas = document.createElement('canvas');
         const tWidth = images.current.logo.naturalWidth || 483;
@@ -402,9 +412,33 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
     const checkReady = () => {
       loadedImages++;
       if (loadedImages === totalImages) {
-        renderCertificate();
+        Promise.all([
+          document.fonts.load('400 260px "Anton"'),
+          document.fonts.load('200 55px "Inter"'),
+          document.fonts.load('300 70px "Inter"'),
+          document.fonts.load('italic 400 70px "Inter"'),
+          document.fonts.load('400 70px "Inter"'),
+          document.fonts.load('400 65px "Inter"'),
+          document.fonts.load('400 62px "Inter"'), 
+          document.fonts.load('200 62px "Inter"'), 
+          document.fonts.load('400 50px "Inter"'),
+          document.fonts.load('bold 90px "Montserrat"'),
+          document.fonts.load('400 70px "Montserrat"'),
+          document.fonts.load('bold 200px "Cascadia Mono"'),
+          document.fonts.load('400 100px "Cascadia Code"')
+        ]).then(() => {
+          document.fonts.ready.then(() => {
+             setTimeout(() => {
+               renderCertificate();
+             }, 250); 
+          });
+        }).catch((e) => {
+          console.warn("Font pre-loading failed, rendering anyway:", e);
+          setTimeout(() => renderCertificate(), 250);
+        });
       }
     };
+    
     if (images.current.logo.complete) checkReady(); else images.current.logo.onload = checkReady;
     if (images.current.sign.complete) checkReady(); else images.current.sign.onload = checkReady;
     if (images.current.pattern.complete) checkReady(); else images.current.pattern.onload = checkReady;
@@ -432,7 +466,20 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
   };
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
+    <div className="relative w-full h-full overflow-hidden flex flex-col">
+      
+      {/* Anti-WebKit font loading bypass elements */}
+      <div style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', opacity: 0.01, pointerEvents: 'none', zIndex: -1 }}>
+        <span style={{ fontFamily: 'Anton', fontWeight: 400 }}>Preload</span>
+        <span style={{ fontFamily: 'Inter', fontWeight: 100 }}>Preload</span>
+        <span style={{ fontFamily: 'Inter', fontWeight: 200 }}>Preload</span>
+        <span style={{ fontFamily: 'Inter', fontWeight: 300 }}>Preload</span>
+        <span style={{ fontFamily: 'Inter', fontWeight: 400 }}>Preload</span>
+        <span style={{ fontFamily: 'Inter', fontStyle: 'italic', fontWeight: 400 }}>Preload</span>
+        <span style={{ fontFamily: 'Montserrat', fontWeight: 700 }}>Preload</span>
+        <span style={{ fontFamily: 'Montserrat', fontWeight: 400 }}>Preload</span>
+        <span style={{ fontFamily: 'Cascadia Code', fontWeight: 400 }}>Preload</span>
+      </div>
       
       {(!activeError && showHint && certUser) && (
         <div
@@ -449,7 +496,7 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
         </div>
       )}
       
-      <div className="w-full h-full overflow-hidden bg-[#0a0b10] flex justify-center items-center p-[25px] rounded-b-[11px] max-md:p-[20px_10px]">
+      <div className="w-full h-full bg-[#0a0b10] flex justify-center items-center overflow-auto p-4 md:p-[25px] rounded-b-[11px]">
         {activeError ? (
           renderErrorState()
         ) : (
@@ -466,10 +513,10 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
               <img 
                 src={previewImage} 
                 alt="OWASP Certificate Preview" 
-                className="max-w-full max-h-full w-auto h-auto aspect-[2480/3508] block shadow-[0_15px_40px_rgba(0,0,0,0.8)]"
+                className="m-auto object-contain max-w-full max-h-full w-auto h-auto block shadow-[0_15px_40px_rgba(0,0,0,0.8)] rounded-[4px]"
               />
             ) : (
-              <div className="text-[#4a7bfe] font-['Fira_Code',monospace] text-xs animate-pulse">
+              <div className="text-[#4a7bfe] font-['Fira_Code',monospace] text-xs animate-pulse m-auto">
                 [+] RENDERING MATRIX...
               </div>
             )}
