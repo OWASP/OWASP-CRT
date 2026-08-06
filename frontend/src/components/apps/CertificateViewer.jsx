@@ -159,7 +159,7 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
     };
 
     const generateQRCodeAdvanced = (options = {}) => {
-      const { size = 250, color = '#1a1a2e' } = options;
+      const { size = 320, color = '#1a1a2e' } = options;
       const qr = qrcode(0, 'H');
       const qrUrl = window.location.href.includes('?id=') ? window.location.href : `${APP_CONFIG.domain}/?id=${certUser.id || "0"}`;
       qr.addData(qrUrl); qr.make();
@@ -290,7 +290,7 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
       const paddingBottom = 10;
       const dynamicRepoY = startY + (textLines * lineHeight) + paddingBottom;
       
-      ctx.globalAlpha = 0.25; 
+      ctx.globalAlpha = 0.45; 
       if (images.current.pattern.complete && images.current.pattern.naturalWidth !== 0) {
         ctx.drawImage(images.current.pattern, 0, 0, 2480, 3508);
       }
@@ -343,7 +343,7 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
       ctx.font = `400 ${nameFontSize}px 'Anton'`;
       ctx.fillText(displayName, 190, 1680);
       
-      ctx.font = "italic 400 70px 'Inter'";
+      ctx.font = "italic 400 60px 'Inter'";
       const projectCount = certUser.stats?.project_count || 1;
       ctx.fillText(`${projectCount} ${projectCount === 1 ? 'Repository' : 'Repositories'}`, 190, dynamicRepoY);
       
