@@ -1,5 +1,5 @@
 # OWASP Community Recognition Tool
-[![Project Status: Beta](https://img.shields.io/badge/status-beta-yellow.svg)](https://owasp.org/www-project-lifecycle/)
+[![OWASP Project: Incubator](https://img.shields.io/badge/OWASP_Project-Incubator-blue.svg)](https://owasp.org/projects/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Live Site](https://img.shields.io/badge/demo-crt.owasp.org-orange.svg)](https://crt.owasp.org)
 
@@ -13,10 +13,18 @@ An automated tool that verifies GitHub contributions and issues verifiable, tier
 
 Both halves of the pipeline are complete and deployed:
 
-- **Backend:** a GitHub Actions workflow that verifies contributions and issues certificates automatically, running live on this repository.
-- **Frontend:** a web app where contributors register to request their credential, then view, download, and share the issued certificate, deployed at **[crt.owasp.org](https://crt.owasp.org)**.
+- **Backend:** A seamless pipeline consisting of a Cloudflare Worker for edge validation and a GitHub Actions workflow that verifies contributions and issues certificates automatically.
+- **Frontend:** A web app where contributors securely authenticate via GitHub to request their credential, then view, download, and share the issued certificate, deployed at **[crt.owasp.org](https://crt.owasp.org)**.
 
 Development continues, but the focus has shifted from building core features to proving the tool holds up under real usage: catching edge cases, confirming tier scoring is fair across different contribution patterns, and hardening the workflow against abuse. If you request a certificate and hit something odd, please open an issue — beta feedback is exactly what we need right now.
+
+### See it in Action
+
+Watch a quick demonstration of the seamless certificate request process:
+
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/96c693f2-f3dd-42f8-8274-6850a1208686" width="100%" max-width="800px" controls="controls"></video>
+</div>
 
 ### About The Project
 
@@ -33,14 +41,20 @@ The **OWASP Community Recognition Tool** aims to create a streamlined, transpare
 
 ### How It Works
  
-The tool runs on GitHub's own infrastructure behind a web interface — no external backend servers required:
+The tool leverages a serverless architecture using Cloudflare Workers and GitHub Actions:
  
-1. **Request:** A contributor visits **[crt.owasp.org](https://crt.owasp.org)**, enters their full name, and is redirected to a pre-filled GitHub Issue titled `Cert Request` in this repository.
-2. **Verify:** A GitHub Action triggers automatically, using the GitHub GraphQL API to scan the requester's direct commits and merged/co-authored pull requests across public OWASP repositories.
-3. **Score & Assign Tier:** Contributions are weighted (lines added, lines removed, commit count), normalized, and checked against dynamically derived thresholds to assign a **Gold**, **Silver**, or **Bronze** tier. A 24-hour cooldown and input validation protect the workflow against spam and abuse.
-4. **Issue:** The result is committed to a dedicated `data` branch, and a comment with the contributor's tier, stats, and a certificate link (`crt.owasp.org/?id=...`) is posted back on the issue, which is then closed automatically.
+1. **Authenticate:** A contributor visits **[crt.owasp.org](https://crt.owasp.org)** and authenticates via the official GitHub OAuth application. This ensures the request is definitively linked to their GitHub identity without any manual form filling.
+2. **Edge Validation:** A Cloudflare Worker at the edge intercepts the request, verifies the secure session, and enforces a strict 24-hour rate limit to protect the backend infrastructure from spam and abuse.
+3. **Analyze & Score:** Once validated, a GitHub Action triggers automatically. It uses the GitHub GraphQL API to scan the requester's direct commits and merged/co-authored pull requests across public OWASP repositories. Contributions are weighted (lines added, lines removed, commit count), normalized, and checked against dynamically derived thresholds to assign a **Gold**, **Silver**, or **Bronze** tier.
+4. **Issue:** The resulting verified data is committed to a dedicated `data` branch. The contributor's certificate is instantly generated and made available to view, download, or share via a persistent link (e.g., `crt.owasp.org/?id=...`).
 
 For the full scoring methodology and how to run the pipeline locally, see the **[Algorithm & Contribution Analytics documentation](algorithm/README.md)**.
+
+### Privacy & Data Transparency
+
+To maintain the integrity and verifiability of the issued certificates, the system automatically commits your **First Name**, **Last Name**, **GitHub Username**, and contribution statistics to the `data` branch of this repository. 
+
+Please note that this is a **public repository**, meaning this information will become publicly accessible as a transparent record of your certification. By authenticating and requesting a credential via the tool, you acknowledge and consent to this public storage.
 
 ### Certificate Tiers
 
@@ -57,6 +71,7 @@ To recognize different levels of commitment, we issue three distinct tiers of ce
 ```text
 OWASP-CRT/
 ├── .github/workflows/     # The certificate-issuing GitHub Action
+├── worker/                # Cloudflare Worker script for OAuth & Edge Validation
 ├── algorithm/             # Python scoring engine & contribution analytics (see its README)
 ├── frontend/              # React/Vite web app for viewing certificates (see its README)
 ├── assets/                # Certificate templates, logos, and design assets
