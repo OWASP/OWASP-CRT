@@ -2,7 +2,7 @@ import React from 'react';
 
 const SystemGuide = () => {
   return (
-    <div className="p-[15px] md:p-[30px] font-['Fira_Code',monospace] text-[12px] md:text-[14px] leading-[1.8] text-slate-400 h-full overflow-y-auto rounded-b-[9px]">
+    <div className="p-[15px] md:p-[30px] font-['Cascadia_Code',monospace] text-[12px] md:text-[14px] leading-[1.8] text-slate-400 h-full overflow-y-auto rounded-b-[9px]">
       <h3 className="text-emerald-500 text-lg mb-2.5">
         &gt; WELCOME TO OWASP-CRT Workspace
       </h3>
@@ -15,10 +15,9 @@ const SystemGuide = () => {
       </h4>
       <ul className="mt-4 text-slate-300 text-[13px] leading-loose [&>li]:before:content-['>'] [&>li]:before:text-[#9d4edd] [&>li]:before:mr-2 [&>li]:before:font-bold">
         <li>Read your initial briefing in <b>Letter_of_Appreciation</b>.</li>
-        <li>Execute <b>CRT_Gen.sh</b> to initialize your identity request via terminal.</li>
-        <li>Provide your exact First and Last name into the terminal prompt.</li>
-        <li>The system will redirect you to GitHub to open an official issue.</li>
-        <li>Once approved by the team, you will receive a secure link containing your unique <b>?id=</b> parameter.</li>
+        <li>Execute <b>CRT_Gen</b> to initialize your identity request via terminal.</li>
+        <li>Provide your exact First and Last name, then authenticate securely via GitHub.</li>
+        <li>The system will automatically verify your OWASP contributions and assign your tier.</li>
         <li className="text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">Open <b>Export_PDF.exe</b> (Double-click on PC, Tap on mobile) to download a high-resolution A4 copy of your credential.</li>
       </ul>
       <br />

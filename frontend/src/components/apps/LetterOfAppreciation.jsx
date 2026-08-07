@@ -15,7 +15,7 @@ const LetterOfAppreciation = ({ startTyping }) => {
         "Your contributions to OWASP projects have directly fortified the stability of this ecosystem.",
         "We value your expertise and real impact, and we officially recognize it.",
         "<br><span class='text-slate-500'>-- OWASP-CRT Project Leader</span>",
-        "<br>&gt; Execute CRT_Gen.sh to issue your verified credential."
+        "<br>&gt; Execute CRT_Gen to issue your verified credential."
     ];
 
     let currentLine = 0; let currentChar = 0; let isTag = false; let tagBuffer = '';
@@ -48,7 +48,7 @@ const LetterOfAppreciation = ({ startTyping }) => {
   }, [startTyping]);
 
   return (
-    <div className="p-[15px] md:p-[30px] font-['Fira_Code',monospace] text-[12px] md:text-[14px] leading-[1.8] text-slate-400 h-full overflow-y-auto rounded-b-[9px]">
+    <div className="p-[15px] md:p-[30px] font-['Cascadia_Code',monospace] text-[12px] md:text-[14px] leading-[1.8] text-slate-400 h-full overflow-y-auto rounded-b-[9px]">
       <span dangerouslySetInnerHTML={{ __html: content }}></span>
       {startTyping && <span className="inline-block w-2 h-4 bg-[#9d4edd] align-middle ml-1 animate-pulse"></span>}
     </div>
