@@ -56,7 +56,8 @@ jobs:
           user_id = os.environ.get('USER_ID', '')
           raw_name = os.environ.get('REAL_NAME_INPUT', '').strip()
           gh_token = os.environ.get('GH_TOKEN', '')
-          ORG_NAME = 'OWASP'
+          ORG_NAMES = ['OWASP', 'GenAI-Security-Project']
+          ORG_SET = {o.upper() for o in ORG_NAMES}
               
           cooldown_seconds = 86400
           
@@ -167,7 +168,7 @@ jobs:
                   repo_owner = repo_node.get('owner', {}).get('login', '')
                   repo_name = f"{repo_owner}/{repo_node.get('name', '')}"
                   
-                  if repo_owner.upper() != ORG_NAME: continue
+                  if repo_owner.upper() not in ORG_SET: continue
                       
                   branch_ref = repo_node.get('defaultBranchRef')
                   if not branch_ref: continue
@@ -209,16 +210,17 @@ jobs:
                 }
               }
               """
-              search_str = f"is:pr is:merged involves:{user} org:{ORG_NAME}"
-              pr_res = run_graphql(pr_query, {"searchQuery": search_str})
-              
-              pr_edges = pr_res.get('data', {}).get('search', {}).get('edges', [])
+              pr_edges = []
+              for org in ORG_NAMES:
+                  search_str = f"is:pr is:merged involves:{user} org:{org}"
+                  pr_res = run_graphql(pr_query, {"searchQuery": search_str})
+                  pr_edges.extend(pr_res.get('data', {}).get('search', {}).get('edges', []))
               for pr_edge in pr_edges:
                   pr_node = pr_edge.get('node', {})
                   if not pr_node or not pr_node.get('repository'): continue
                   
                   repo_owner = pr_node['repository']['owner']['login']
-                  if repo_owner.upper() != ORG_NAME: continue
+                  if repo_owner.upper() not in ORG_SET: continue
                   
                   repo_name = pr_node['repository']['nameWithOwner']
                   merge_commit = pr_node.get('mergeCommit')
