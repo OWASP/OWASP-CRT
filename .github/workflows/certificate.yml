@@ -64,7 +64,6 @@ jobs:
           cert_path = f"db_branch/certs/{user_id}.json"
           attempt_path = f"db_branch/attempts/{user_id}.json"
 
-          # Abort processing and record error state to the attempts log
           def abort_with_error(msg, apply_limit=False):
               print(f"::error::{msg}")
               os.makedirs("db_branch/attempts", exist_ok=True)
@@ -78,7 +77,7 @@ jobs:
               sys.exit(1)
               
           try:
-              # Enforce cooldown period based on last successful issuance or rate-limited attempts
+              # Enforce cooldown period
               last_time = 0
               if os.path.exists(cert_path):
                   with open(cert_path, "r", encoding="utf-8") as f:
@@ -111,17 +110,29 @@ jobs:
                   'User-Agent': 'OWASP-CRT-GraphQL'
               }
 
-              def run_graphql(query, variables=None):
+              # Smart Retry Mechanism for GitHub API Timeout / 502 errors
+              def run_graphql(query, variables=None, max_retries=4):
                   payload = json.dumps({'query': query, 'variables': variables or {}}).encode('utf-8')
-                  req = urllib.request.Request('https://api.github.com/graphql', data=payload, headers=headers)
-                  try:
-                      with urllib.request.urlopen(req) as response:
-                          result = json.loads(response.read().decode())
-                          if 'errors' in result:
-                              abort_with_error(f"GraphQL Error: {result['errors']}")
-                          return result
-                  except Exception as e:
-                      abort_with_error(f"GraphQL Connection Error: {e}")
+                  for attempt in range(max_retries):
+                      req = urllib.request.Request('https://api.github.com/graphql', data=payload, headers=headers)
+                      try:
+                          with urllib.request.urlopen(req) as response:
+                              result = json.loads(response.read().decode())
+                              if 'errors' in result:
+                                  err_str = str(result['errors'])
+                                  if "timeout" in err_str.lower() or "502" in err_str:
+                                      if attempt < max_retries - 1:
+                                          time.sleep(2 ** (attempt + 1))
+                                          continue
+                                  abort_with_error(f"GraphQL Error: {err_str}")
+                              return result
+                      except urllib.error.HTTPError as e:
+                          if e.code in [500, 502, 503, 504] and attempt < max_retries - 1:
+                              time.sleep(2 ** (attempt + 1))
+                              continue
+                          abort_with_error(f"GraphQL Connection Error: HTTP {e.code}")
+                      except Exception as e:
+                          abort_with_error(f"GraphQL Connection Error: {e}")
 
               print(f"[*] Fetching ID for user: {user}...")
               id_query = """query($login: String!) { user(login: $login) { id } }"""
@@ -133,25 +144,43 @@ jobs:
               graphql_author_id = id_res['data']['user']['id']
               unique_commits = {}
 
-              # Phase 1: Retrieve commits authored directly on repository default branches
-              print("[*] Phase 1: Fetching direct default branch commits...")
-              main_query = """
-              query($login: String!, $authorId: ID!) {
+              # Phase 1a: Fetch contributed repositories (Shallow Query to prevent timeout)
+              print("[*] Phase 1a: Fetching contributed repositories (Shallow Query)...")
+              repo_query = """
+              query($login: String!) {
                 user(login: $login) {
                   repositoriesContributedTo(first: 100, contributionTypes: [COMMIT]) {
                     edges {
                       node {
                         name
                         owner { login }
-                        defaultBranchRef {
-                          target {
-                            ... on Commit {
-                              history(author: { id: $authorId }, first: 100) {
-                                edges {
-                                  node { oid message additions deletions committedDate }
-                                }
-                              }
-                            }
+                      }
+                    }
+                  }
+                }
+              }
+              """
+              repo_res = run_graphql(repo_query, {"login": user})
+              contributed_repos = repo_res.get('data', {}).get('user', {}).get('repositoriesContributedTo', {}).get('edges', [])
+              
+              target_repos = []
+              for edge in contributed_repos:
+                  owner = edge.get('node', {}).get('owner', {}).get('login', '')
+                  name = edge.get('node', {}).get('name', '')
+                  if owner.upper() in ORG_SET:
+                      target_repos.append({"owner": owner, "name": name})
+
+              # Phase 1b: Fetch commit history only for target repos
+              print(f"[*] Phase 1b: Fetching commit history for {len(target_repos)} target repos...")
+              commit_query = """
+              query($owner: String!, $name: String!, $authorId: ID!) {
+                repository(owner: $owner, name: $name) {
+                  defaultBranchRef {
+                    target {
+                      ... on Commit {
+                        history(author: { id: $authorId }, first: 100) {
+                          edges {
+                            node { oid additions deletions committedDate }
                           }
                         }
                       }
@@ -160,16 +189,10 @@ jobs:
                 }
               }
               """
-              data_res = run_graphql(main_query, {"login": user, "authorId": graphql_author_id})
-              contributed_repos = data_res.get('data', {}).get('user', {}).get('repositoriesContributedTo', {}).get('edges', [])
-              
-              for repo_edge in contributed_repos:
-                  repo_node = repo_edge.get('node', {})
-                  repo_owner = repo_node.get('owner', {}).get('login', '')
-                  repo_name = f"{repo_owner}/{repo_node.get('name', '')}"
-                  
-                  if repo_owner.upper() not in ORG_SET: continue
-                      
+              for repo in target_repos:
+                  c_res = run_graphql(commit_query, {"owner": repo['owner'], "name": repo['name'], "authorId": graphql_author_id})
+                  repo_node = c_res.get('data', {}).get('repository', {})
+                  if not repo_node: continue
                   branch_ref = repo_node.get('defaultBranchRef')
                   if not branch_ref: continue
                       
@@ -178,15 +201,15 @@ jobs:
                       c = commit_edge['node']
                       sha = c['oid']
                       unique_commits[sha] = {
-                          'repo': repo_name,
+                          'repo': f"{repo['owner']}/{repo['name']}",
                           'added': c['additions'],
                           'removed': c['deletions'],
                           'date': c['committedDate'],
                           'type': 'Direct'
                       }
 
-              # Phase 2: Retrieve co-authored and PR merge commits within the organization
-              print("[*] Phase 2: Fetching valid PR merge commits (Co-authored)...")
+              # Phase 2: Fetch valid PR merge commits (Multi-branch support)
+              print("[*] Phase 2: Fetching valid PR merge commits (Multi-branch)...")
               pr_query = """
               query($searchQuery: String!) {
                 search(query: $searchQuery, type: ISSUE, first: 100) {
@@ -198,9 +221,7 @@ jobs:
                           oid additions deletions committedDate
                           authors(first: 10) {
                             edges {
-                              node {
-                                user { login }
-                              }
+                              node { user { login } }
                             }
                           }
                         }
@@ -212,9 +233,11 @@ jobs:
               """
               pr_edges = []
               for org in ORG_NAMES:
-                  search_str = f"is:pr is:merged involves:{user} org:{org}"
+                  # Use 'author:' to accurately find merged PRs across all branches
+                  search_str = f"is:pr is:merged author:{user} org:{org}"
                   pr_res = run_graphql(pr_query, {"searchQuery": search_str})
                   pr_edges.extend(pr_res.get('data', {}).get('search', {}).get('edges', []))
+                  
               for pr_edge in pr_edges:
                   pr_node = pr_edge.get('node', {})
                   if not pr_node or not pr_node.get('repository'): continue
@@ -298,7 +321,6 @@ jobs:
 
               total_projects = len(repo_stats)
 
-              # Clean up any existing attempt logs upon success
               if os.path.exists(attempt_path):
                   try: os.remove(attempt_path)
                   except: pass
@@ -349,7 +371,6 @@ jobs:
 
             git commit -m "db(sys): update records for @${{ inputs.github_user }} [skip ci]"
 
-            # Retry push up to 5 times to handle concurrent pushes to the data branch
             max_attempts=5
             attempt=1
             pushed=false
