@@ -249,7 +249,7 @@ jobs:
               total_commits = len(unique_commits)
               
               if total_commits == 0:
-                  abort_with_error("No verified commits found in OWASP repositories.", apply_limit=True)
+                  abort_with_error("No verified commits found in the OWASP or GenAI Security Project repositories.", apply_limit=True)
 
               total_added = sum(c['added'] for c in unique_commits.values())
               total_removed = sum(c['removed'] for c in unique_commits.values())
