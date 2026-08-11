@@ -49,7 +49,7 @@ jobs:
           REAL_NAME_INPUT: ${{ inputs.full_name }}
           GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
-          import urllib.request, json, os, sys, re, time, math
+          import urllib.request, urllib.parse, json, os, sys, re, time, math
           
           now = time.time()
           user = os.environ.get('USER_INPUT', '')
@@ -144,34 +144,93 @@ jobs:
               graphql_author_id = id_res['data']['user']['id']
               unique_commits = {}
 
-              # Phase 1a: Fetch contributed repositories (Shallow Query to prevent timeout)
-              print("[*] Phase 1a: Fetching contributed repositories (Shallow Query)...")
-              repo_query = """
-              query($login: String!) {
-                user(login: $login) {
-                  repositoriesContributedTo(first: 100, contributionTypes: [COMMIT]) {
-                    edges {
-                      node {
-                        name
-                        owner { login }
-                      }
-                    }
-                  }
-                }
-              }
-              """
-              repo_res = run_graphql(repo_query, {"login": user})
-              contributed_repos = repo_res.get('data', {}).get('user', {}).get('repositoriesContributedTo', {}).get('edges', [])
-              
-              target_repos = []
-              for edge in contributed_repos:
-                  owner = edge.get('node', {}).get('owner', {}).get('login', '')
-                  name = edge.get('node', {}).get('name', '')
-                  if owner.upper() in ORG_SET:
-                      target_repos.append({"owner": owner, "name": name})
+              # ==========================================
+              # Phase 1a: 3-Layer Hybrid Architecture
+              # ==========================================
+              print("[*] Phase 1a: Discovering target repositories (Hybrid Search Strategy)...")
+              target_repos_dict = {}
+              search_failed_due_to_restriction = False
+              search_headers = headers.copy()
 
-              # Phase 1b: Fetch commit history only for target repos
-              print(f"[*] Phase 1b: Fetching commit history for {len(target_repos)} target repos...")
+              for org in ORG_NAMES:
+                  print(f"[*] Searching for PRs by {user} in {org}...")
+                  query_str = f"type:pr author:{user} org:{org}"
+                  encoded_query = urllib.parse.quote(query_str)
+                  search_url = f"https://api.github.com/search/issues?q={encoded_query}&per_page=100"
+                  
+                  req = urllib.request.Request(search_url, headers=search_headers)
+                  try:
+                      with urllib.request.urlopen(req) as response:
+                          result = json.loads(response.read().decode())
+                          for item in result.get('items', []):
+                              repo_url = item.get('repository_url', '')
+                              if not repo_url: continue
+                              
+                              parts = repo_url.split('/')
+                              repo_name = parts[-1]
+                              repo_owner = parts[-2]
+                              repo_key = f"{repo_owner}/{repo_name}"
+                              
+                              if repo_key not in target_repos_dict:
+                                  target_repos_dict[repo_key] = {"owner": repo_owner, "name": repo_name}
+                                  print(f"    - [HIT-PlanA] Found PR activity: {repo_key}")
+                                  
+                  except urllib.error.HTTPError as e:
+                      err_msg = ""
+                      try: err_msg = e.read().decode()
+                      except: pass
+                      
+                      if e.code == 422 and "users do not exist or you do not have permission" in err_msg:
+                          print(f"    [!] GitHub Shadowban detected for {user}.")
+                          search_failed_due_to_restriction = True
+                          break
+                      else:
+                          print(f"    [!] Search API HTTP Error for {org}: {e.code}")
+                  
+                  time.sleep(2)
+
+              # Plan B (GraphQL) & Plan C (Events API)
+              if search_failed_due_to_restriction:
+                  print("[*] Initializing Plan B (GraphQL) and Plan C (Events API) to bypass restrictions...")
+                  
+                  # Plan B: GraphQL (May return empty due to contribution graph manipulation)
+                  repo_query = """
+                  query($login: String!) { user(login: $login) { repositoriesContributedTo(first: 100, contributionTypes: [COMMIT]) { edges { node { name owner { login } } } } } }
+                  """
+                  try:
+                      repo_res = run_graphql(repo_query, {"login": user})
+                      contributed_repos = repo_res.get('data', {}).get('user', {}).get('repositoriesContributedTo', {}).get('edges', [])
+                      for edge in contributed_repos:
+                          owner = edge['node']['owner']['login']
+                          name = edge['node']['name']
+                          if owner.upper() in ORG_SET:
+                              repo_key = f"{owner}/{name}"
+                              target_repos_dict[repo_key] = {"owner": owner, "name": name}
+                              print(f"    - [HIT-PlanB] Found via GraphQL: {repo_key}")
+                  except Exception: pass
+
+                  # Plan C: Raw Events API (Uncensored push/PR logs for the last 90 days)
+                  print(f"[*] Scanning Raw Events API for {user}...")
+                  events_url = f"https://api.github.com/users/{user}/events?per_page=100"
+                  req = urllib.request.Request(events_url, headers=search_headers)
+                  try:
+                      with urllib.request.urlopen(req) as response:
+                          events = json.loads(response.read().decode())
+                          for event in events:
+                              if event.get('type') in ['PushEvent', 'PullRequestEvent', 'IssuesEvent']:
+                                  repo_full = event['repo']['name']
+                                  owner, name = repo_full.split('/')
+                                  if owner.upper() in ORG_SET and repo_full not in target_repos_dict:
+                                      target_repos_dict[repo_full] = {"owner": owner, "name": name}
+                                      print(f"    - [HIT-PlanC] Found via Raw Events: {repo_full}")
+                  except Exception as e:
+                      print(f"    [!] Events API failed: {e}")
+
+              target_repos = list(target_repos_dict.values())
+              print(f"[*] Found {len(target_repos)} target repositories dynamically.")
+
+              # Phase 1b: Fetch commit history only for target repos (Default Branch)
+              print(f"[*] Phase 1b: Fetching commit history for target repos...")
               commit_query = """
               query($owner: String!, $name: String!, $authorId: ID!) {
                 repository(owner: $owner, name: $name) {
@@ -233,7 +292,6 @@ jobs:
               """
               pr_edges = []
               for org in ORG_NAMES:
-                  # Use 'author:' to accurately find merged PRs across all branches
                   search_str = f"is:pr is:merged author:{user} org:{org}"
                   pr_res = run_graphql(pr_query, {"searchQuery": search_str})
                   pr_edges.extend(pr_res.get('data', {}).get('search', {}).get('edges', []))
@@ -401,3 +459,4 @@ jobs:
               exit 1
             fi
           fi
+          
