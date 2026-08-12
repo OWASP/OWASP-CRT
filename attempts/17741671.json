@@ -1,1 +1,1 @@
-{"last_attempt": 1786460915, "status": "error", "message": "No verified commits found in the OWASP or GenAI Security Project repositories.", "apply_limit": true}
+{"last_attempt": 1786507161, "status": "error", "message": "Rate Limit Exceeded. Cooldown active.", "apply_limit": true}
