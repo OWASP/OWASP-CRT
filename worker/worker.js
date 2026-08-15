@@ -121,10 +121,7 @@ export default {
 
       if (certCheckRes.ok) {
         const certData = await certCheckRes.json();
-        
-        // Decode base64 content
         const decodedContent = JSON.parse(decodeURIComponent(escape(atob(certData.content))));
-        
         const lastIssued = decodedContent.last_issued || 0;
         if (nowSeconds - lastIssued < COOLDOWN_SECONDS) {
            const hoursLeft = Math.ceil((COOLDOWN_SECONDS - (nowSeconds - lastIssued)) / 3600);
@@ -132,8 +129,8 @@ export default {
         }
       }
 
-      // Dispatch GitHub Action if user is not rate-limited
-      await fetch(`https://api.github.com/repos/${env.REPO_OWNER}/${env.REPO_NAME}/actions/workflows/${env.WORKFLOW_ID}/dispatches`, {
+      // Dispatch GitHub Action via Repository Dispatch (Sending User Token Securely)
+      await fetch(`https://api.github.com/repos/${env.REPO_OWNER}/${env.REPO_NAME}/dispatches`, {
         method: "POST",
         headers: {
           "Accept": "application/vnd.github.v3+json",
@@ -142,11 +139,12 @@ export default {
           "User-Agent": "OWASP-CRT-App"
         },
         body: JSON.stringify({
-          ref: "main",
-          inputs: {
+          event_type: "generate_cert_event",
+          client_payload: {
             full_name: safeFullName,
             github_user: verifiedUsername,
-            github_id: verifiedUserId
+            github_id: verifiedUserId,
+            user_token: userAccessToken
           }
         })
       });
