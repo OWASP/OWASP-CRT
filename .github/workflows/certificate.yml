@@ -1,23 +1,11 @@
 name: Generate Certificate
 
 on:
-  workflow_dispatch:
-    inputs:
-      full_name:
-        description: 'Full Name'
-        required: true
-        type: string
-      github_user:
-        description: 'GitHub Username'
-        required: true
-        type: string
-      github_id:
-        description: 'GitHub User ID'
-        required: true
-        type: string
+  repository_dispatch:
+    types: [generate_cert_event]
 
 concurrency:
-  group: cert-request-${{ inputs.github_user }}
+  group: cert-request-${{ github.event.client_payload.github_user }}
   cancel-in-progress: true
 
 jobs:
@@ -27,6 +15,10 @@ jobs:
       contents: write 
     
     steps:
+      - name: Mask User Token (Security)
+        run: |
+          echo "::add-mask::${{ github.event.client_payload.user_token }}"
+
       - name: Checkout Main Repository
         uses: actions/checkout@v4
 
@@ -44,12 +36,13 @@ jobs:
       - name: GraphQL Deep Scan & Generate Report
         id: generate
         env:
-          USER_INPUT: ${{ inputs.github_user }} 
-          USER_ID: ${{ inputs.github_id }}
-          REAL_NAME_INPUT: ${{ inputs.full_name }}
-          GH_TOKEN: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+          USER_INPUT: ${{ github.event.client_payload.github_user }} 
+          USER_ID: ${{ github.event.client_payload.github_id }}
+          REAL_NAME_INPUT: ${{ github.event.client_payload.full_name }}
+          GH_TOKEN: ${{ github.event.client_payload.user_token }}
         run: |
           import urllib.request, urllib.parse, json, os, sys, re, time, math
+          import concurrent.futures
           
           now = time.time()
           user = os.environ.get('USER_INPUT', '')
@@ -77,7 +70,6 @@ jobs:
               sys.exit(1)
               
           try:
-              # Enforce cooldown period
               last_time = 0
               if os.path.exists(cert_path):
                   with open(cert_path, "r", encoding="utf-8") as f:
@@ -95,10 +87,8 @@ jobs:
               if cooldown_seconds > 0 and last_time > 0 and (now - last_time) < cooldown_seconds:
                   abort_with_error("Rate Limit Exceeded. Cooldown active.", apply_limit=True)
 
-              # Validate user-provided real name
               if len(raw_name) > 20:
                   abort_with_error("Input Error: Name exceeds 20 characters.")
-                  
               if re.search(r'[^\w\s.\-]', raw_name):
                   abort_with_error("Input Error: Name contains restricted characters.")
                   
@@ -107,10 +97,9 @@ jobs:
               headers = {
                   'Authorization': f'Bearer {gh_token}',
                   'Content-Type': 'application/json',
-                  'User-Agent': 'OWASP-CRT-GraphQL'
+                  'User-Agent': 'OWASP-CRT-GraphQL-Turbo'
               }
 
-              # Smart Retry Mechanism for GitHub API Timeout / 502 errors
               def run_graphql(query, variables=None, max_retries=4):
                   payload = json.dumps({'query': query, 'variables': variables or {}}).encode('utf-8')
                   for attempt in range(max_retries):
@@ -134,198 +123,224 @@ jobs:
                       except Exception as e:
                           abort_with_error(f"GraphQL Connection Error: {e}")
 
-              print(f"[*] Fetching ID for user: {user}...")
-              id_query = """query($login: String!) { user(login: $login) { id } }"""
-              id_res = run_graphql(id_query, {"login": user})
+              print(f"[*] Fetching Identity for: {user}...")
+              user_query = """query($login: String!) { user(login: $login) { id name createdAt } }"""
+              user_res = run_graphql(user_query, {"login": user})
               
-              if not id_res or 'errors' in id_res or not id_res.get('data', {}).get('user'):
+              if not user_res or 'errors' in user_res or not user_res.get('data', {}).get('user'):
                   abort_with_error(f"User Not Found: {user}")
                   
-              graphql_author_id = id_res['data']['user']['id']
+              graphql_author_id = user_res['data']['user']['id']
+              github_real_name = user_res['data']['user'].get('name') or ''
+              created_at = user_res['data']['user']['createdAt']
+              
               unique_commits = {}
-
-              # ==========================================
-              # Phase 1a: 3-Layer Hybrid Architecture
-              # ==========================================
-              print("[*] Phase 1a: Discovering target repositories (Hybrid Search Strategy)...")
               target_repos_dict = {}
-              search_failed_due_to_restriction = False
+              commits_to_fetch = set()
+
+              # ==========================================
+              # Phase 1: Deep REST Search (Threaded)
+              # ==========================================
+              print("[*] Phase 1: Fast Threaded REST Search (Squashed/Co-authored)...")
               search_headers = headers.copy()
-
+              search_headers['Accept'] = 'application/vnd.github+json'
+              
+              queries_to_run = set()
               for org in ORG_NAMES:
-                  print(f"[*] Searching for PRs by {user} in {org}...")
-                  query_str = f"type:pr author:{user} org:{org}"
-                  encoded_query = urllib.parse.quote(query_str)
-                  search_url = f"https://api.github.com/search/issues?q={encoded_query}&per_page=100"
-                  
-                  req = urllib.request.Request(search_url, headers=search_headers)
-                  try:
-                      with urllib.request.urlopen(req) as response:
-                          result = json.loads(response.read().decode())
-                          for item in result.get('items', []):
-                              repo_url = item.get('repository_url', '')
-                              if not repo_url: continue
-                              
-                              parts = repo_url.split('/')
-                              repo_name = parts[-1]
-                              repo_owner = parts[-2]
-                              repo_key = f"{repo_owner}/{repo_name}"
-                              
-                              if repo_key not in target_repos_dict:
-                                  target_repos_dict[repo_key] = {"owner": repo_owner, "name": repo_name}
-                                  print(f"    - [HIT-PlanA] Found PR activity: {repo_key}")
-                                  
-                  except urllib.error.HTTPError as e:
-                      err_msg = ""
-                      try: err_msg = e.read().decode()
-                      except: pass
-                      
-                      if e.code == 422 and "users do not exist or you do not have permission" in err_msg:
-                          print(f"    [!] GitHub Shadowban detected for {user}.")
-                          search_failed_due_to_restriction = True
+                  for qualifier in ['org', 'user']:
+                      queries_to_run.add(f"author:{user} {qualifier}:{org}")
+                      queries_to_run.add(f'"{user}" {qualifier}:{org}')
+                      if github_real_name:
+                          queries_to_run.add(f'"{github_real_name}" {qualifier}:{org}')
+
+              def search_rest_query(q_str):
+                  local_commits = set()
+                  local_repos = {}
+                  for page in range(1, 5): 
+                      encoded_query = urllib.parse.quote(q_str)
+                      search_url = f"https://api.github.com/search/commits?q={encoded_query}&per_page=100&page={page}"
+                      req = urllib.request.Request(search_url, headers=search_headers)
+                      try:
+                          with urllib.request.urlopen(req) as response:
+                              result = json.loads(response.read().decode())
+                              items = result.get('items', [])
+                              for item in items:
+                                  sha = item['sha']
+                                  repo_full = item['repository']['full_name']
+                                  owner, repo_name = repo_full.split('/')
+                                  if owner.upper() in ORG_SET:
+                                      local_commits.add((owner, repo_name, sha))
+                                      local_repos[repo_full] = {"owner": owner, "name": repo_name}
+                              if len(items) < 100:
+                                  break
+                      except urllib.error.HTTPError as e:
+                          if e.code in [403, 429]:
+                              time.sleep(3)
+                              continue
                           break
-                      else:
-                          print(f"    [!] Search API HTTP Error for {org}: {e.code}")
+                      except Exception:
+                          break
+                  return local_commits, local_repos
+
+              with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+                  futures = [executor.submit(search_rest_query, q) for q in queries_to_run]
+                  for f in concurrent.futures.as_completed(futures):
+                      c, r = f.result()
+                      commits_to_fetch.update(c)
+                      target_repos_dict.update(r)
+
+              # ==========================================
+              # Phase 2: Graph & Events (Batched)
+              # ==========================================
+              print("[*] Phase 2: Graph Batched Scanning...")
+              start_year = int(created_at[:4])
+              current_year = int(time.strftime("%Y"))
+              years = list(range(start_year, current_year + 1))
+
+              for i in range(0, len(years), 5):
+                  chunk = years[i:i+5]
+                  query_parts = []
+                  for y in chunk:
+                      query_parts.append(f'y{y}: contributionsCollection(from: "{y}-01-01T00:00:00Z", to: "{y}-12-31T23:59:59Z") {{ commitContributionsByRepository(maxRepositories: 100) {{ repository {{ nameWithOwner owner {{ login }} name }} }} }}')
                   
-                  time.sleep(2)
-
-              # Plan B (GraphQL) & Plan C (Events API)
-              if search_failed_due_to_restriction:
-                  print("[*] Initializing Plan B (GraphQL) and Plan C (Events API) to bypass restrictions...")
-                  
-                  # Plan B: GraphQL (May return empty due to contribution graph manipulation)
-                  repo_query = """
-                  query($login: String!) { user(login: $login) { repositoriesContributedTo(first: 100, contributionTypes: [COMMIT]) { edges { node { name owner { login } } } } } }
-                  """
+                  graph_query = f"query($login: String!) {{ user(login: $login) {{ {' '.join(query_parts)} }} }}"
                   try:
-                      repo_res = run_graphql(repo_query, {"login": user})
-                      contributed_repos = repo_res.get('data', {}).get('user', {}).get('repositoriesContributedTo', {}).get('edges', [])
-                      for edge in contributed_repos:
-                          owner = edge['node']['owner']['login']
-                          name = edge['node']['name']
-                          if owner.upper() in ORG_SET:
-                              repo_key = f"{owner}/{name}"
-                              target_repos_dict[repo_key] = {"owner": owner, "name": name}
-                              print(f"    - [HIT-PlanB] Found via GraphQL: {repo_key}")
-                  except Exception: pass
+                      graph_res = run_graphql(graph_query, {"login": user})
+                      user_data = graph_res.get('data', {}).get('user', {})
+                      for y in chunk:
+                          collection = user_data.get(f'y{y}', {})
+                          for contrib in collection.get('commitContributionsByRepository', []):
+                              repo_node = contrib.get('repository')
+                              if repo_node and repo_node['owner']['login'].upper() in ORG_SET:
+                                  target_repos_dict[repo_node['nameWithOwner']] = {
+                                      "owner": repo_node['owner']['login'], 
+                                      "name": repo_node['name']
+                                  }
+                  except: pass
 
-                  # Plan C: Raw Events API (Uncensored push/PR logs for the last 90 days)
-                  print(f"[*] Scanning Raw Events API for {user}...")
-                  events_url = f"https://api.github.com/users/{user}/events?per_page=100"
-                  req = urllib.request.Request(events_url, headers=search_headers)
-                  try:
-                      with urllib.request.urlopen(req) as response:
-                          events = json.loads(response.read().decode())
-                          for event in events:
-                              if event.get('type') in ['PushEvent', 'PullRequestEvent', 'IssuesEvent']:
-                                  repo_full = event['repo']['name']
-                                  owner, name = repo_full.split('/')
-                                  if owner.upper() in ORG_SET and repo_full not in target_repos_dict:
-                                      target_repos_dict[repo_full] = {"owner": owner, "name": name}
-                                      print(f"    - [HIT-PlanC] Found via Raw Events: {repo_full}")
-                  except Exception as e:
-                      print(f"    [!] Events API failed: {e}")
+              events_url = f"https://api.github.com/users/{user}/events?per_page=100"
+              try:
+                  req = urllib.request.Request(events_url, headers=headers)
+                  with urllib.request.urlopen(req) as response:
+                      for event in json.loads(response.read().decode()):
+                          if event.get('type') in ['PushEvent', 'PullRequestEvent', 'IssuesEvent']:
+                              repo_full = event['repo']['name']
+                              owner, name = repo_full.split('/')
+                              if owner.upper() in ORG_SET and repo_full not in target_repos_dict:
+                                  target_repos_dict[repo_full] = {"owner": owner, "name": name}
+              except: pass
 
-              target_repos = list(target_repos_dict.values())
-              print(f"[*] Found {len(target_repos)} target repositories dynamically.")
-
-              # Phase 1b: Fetch commit history only for target repos (Default Branch)
-              print(f"[*] Phase 1b: Fetching commit history for target repos...")
+              # ==========================================
+              # Phase 3: Fetch Primary History (Threaded)
+              # ==========================================
+              print("[*] Phase 3: Parallel Default Branch History Sync...")
               commit_query = """
-              query($owner: String!, $name: String!, $authorId: ID!) {
+              query($owner: String!, $name: String!, $authorId: ID!, $cursor: String) {
                 repository(owner: $owner, name: $name) {
                   defaultBranchRef {
-                    target {
-                      ... on Commit {
-                        history(author: { id: $authorId }, first: 100) {
-                          edges {
-                            node { oid additions deletions committedDate }
-                          }
-                        }
-                      }
-                    }
+                    target { ... on Commit { history(author: { id: $authorId }, first: 100, after: $cursor) {
+                      pageInfo { hasNextPage endCursor }
+                      edges { node { oid additions deletions committedDate } }
+                    }}}
                   }
                 }
               }
               """
-              for repo in target_repos:
-                  c_res = run_graphql(commit_query, {"owner": repo['owner'], "name": repo['name'], "authorId": graphql_author_id})
-                  repo_node = c_res.get('data', {}).get('repository', {})
-                  if not repo_node: continue
-                  branch_ref = repo_node.get('defaultBranchRef')
-                  if not branch_ref: continue
-                      
-                  commit_history = branch_ref.get('target', {}).get('history', {}).get('edges', [])
-                  for commit_edge in commit_history:
-                      c = commit_edge['node']
-                      sha = c['oid']
-                      unique_commits[sha] = {
-                          'repo': f"{repo['owner']}/{repo['name']}",
-                          'added': c['additions'],
-                          'removed': c['deletions'],
-                          'date': c['committedDate'],
-                          'type': 'Direct'
-                      }
-
-              # Phase 2: Fetch valid PR merge commits (Multi-branch support)
-              print("[*] Phase 2: Fetching valid PR merge commits (Multi-branch)...")
-              pr_query = """
-              query($searchQuery: String!) {
-                search(query: $searchQuery, type: ISSUE, first: 100) {
-                  edges {
-                    node {
-                      ... on PullRequest {
-                        repository { nameWithOwner owner { login } }
-                        mergeCommit {
-                          oid additions deletions committedDate
-                          authors(first: 10) {
-                            edges {
-                              node { user { login } }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-              """
-              pr_edges = []
-              for org in ORG_NAMES:
-                  search_str = f"is:pr is:merged author:{user} org:{org}"
-                  pr_res = run_graphql(pr_query, {"searchQuery": search_str})
-                  pr_edges.extend(pr_res.get('data', {}).get('search', {}).get('edges', []))
-                  
-              for pr_edge in pr_edges:
-                  pr_node = pr_edge.get('node', {})
-                  if not pr_node or not pr_node.get('repository'): continue
-                  
-                  repo_owner = pr_node['repository']['owner']['login']
-                  if repo_owner.upper() not in ORG_SET: continue
-                  
-                  repo_name = pr_node['repository']['nameWithOwner']
-                  merge_commit = pr_node.get('mergeCommit')
-                  
-                  if not merge_commit: continue
-                      
-                  sha = merge_commit['oid']
-                  
-                  is_author = False
-                  authors_edges = merge_commit.get('authors', {}).get('edges', [])
-                  for a_edge in authors_edges:
-                      a_user = a_edge.get('node', {}).get('user', {})
-                      if a_user and a_user.get('login', '').lower() == user.lower():
-                          is_author = True
-                          break
+              def fetch_history(repo_full, repo):
+                  local_c = {}
+                  cursor = None
+                  while True:
+                      try:
+                          c_res = run_graphql(commit_query, {"owner": repo['owner'], "name": repo['name'], "authorId": graphql_author_id, "cursor": cursor})
+                          repo_node = c_res.get('data', {}).get('repository') or {}
+                          branch_ref = repo_node.get('defaultBranchRef') or {}
+                          history = branch_ref.get('target', {}).get('history', {})
                           
-                  if is_author and sha not in unique_commits:
-                      unique_commits[sha] = {
-                          'repo': repo_name,
-                          'added': merge_commit['additions'],
-                          'removed': merge_commit['deletions'],
-                          'date': merge_commit['committedDate'],
-                          'type': 'PR'
-                      }
+                          for edge in history.get('edges', []):
+                              c = edge['node']
+                              local_c[c['oid']] = {
+                                  'repo': repo_full, 'added': c['additions'], 'removed': c['deletions'],
+                                  'date': c['committedDate'], 'type': 'Direct'
+                              }
+                          if history.get('pageInfo', {}).get('hasNextPage'):
+                              cursor = history['pageInfo']['endCursor']
+                          else:
+                              break
+                      except: break
+                  return repo_full, local_c
+
+              with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+                  futures = [executor.submit(fetch_history, k, v) for k, v in target_repos_dict.items()]
+                  for f in concurrent.futures.as_completed(futures):
+                      repo_full, lc = f.result()
+                      unique_commits.update(lc)
+
+              # ==========================================
+              # Phase 4: Resolving Deep Search (Threaded)
+              # ==========================================
+              print("[*] Phase 4: Parallel Resolution of Squashed/Co-authored...")
+              commits_by_repo = {}
+              for owner, repo_name, sha in commits_to_fetch:
+                  if sha in unique_commits: continue
+                  repo_full = f"{owner}/{repo_name}"
+                  if repo_full not in commits_by_repo:
+                      commits_by_repo[repo_full] = []
+                  commits_by_repo[repo_full].append(sha)
+                  
+              chunks_to_process = []
+              for repo_full, shas in commits_by_repo.items():
+                  owner, repo_name = repo_full.split('/')
+                  for i in range(0, len(shas), 40):
+                      chunks_to_process.append((owner, repo_name, shas[i:i+40]))
+
+              def resolve_chunk(owner, repo_name, chunk):
+                  local_c = {}
+                  query_parts = []
+                  for idx, sha in enumerate(chunk):
+                      query_parts.append(f'c{idx}: object(oid: "{sha}") {{ ... on Commit {{ oid additions deletions committedDate message authors(first: 5) {{ edges {{ node {{ name user {{ login }} }} }} }} }} }}')
+                  
+                  gql_query = f'query {{ repository(owner: "{owner}", name: "{repo_name}") {{ {" ".join(query_parts)} }} }}'
+                  try:
+                      res = run_graphql(gql_query)
+                      repo_data = res.get('data', {}).get('repository') or {}
+                      
+                      for idx, sha in enumerate(chunk):
+                          c = repo_data.get(f"c{idx}")
+                          if not c: continue
+                          
+                          is_verified = False
+                          for a_edge in c.get('authors', {}).get('edges', []):
+                              node = a_edge.get('node', {})
+                              a_user = node.get('user')
+                              if a_user and a_user.get('login', '').lower() == user.lower():
+                                  is_verified = True
+                                  break
+                              if node.get('name', '').lower() == user.lower() or (github_real_name and node.get('name', '').lower() == github_real_name.lower()):
+                                  is_verified = True
+                                  break
+                                  
+                          if not is_verified:
+                              msg = c.get('message', '').lower()
+                              u_lower = user.lower()
+                              r_lower = github_real_name.lower() if github_real_name else None
+                              if (u_lower in msg) or (r_lower and r_lower in msg):
+                                  if "co-authored-by:" in msg or "signed-off-by:" in msg:
+                                      is_verified = True
+                                      
+                          if is_verified:
+                              local_c[sha] = {
+                                  'repo': f"{owner}/{repo_name}", 'added': c.get('additions', 0),
+                                  'removed': c.get('deletions', 0), 'date': c.get('committedDate', ''),
+                                  'type': 'Resolved'
+                              }
+                  except: pass
+                  return local_c
+
+              with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+                  futures = [executor.submit(resolve_chunk, o, r, c) for o, r, c in chunks_to_process]
+                  for f in concurrent.futures.as_completed(futures):
+                      rescued = f.result()
+                      unique_commits.update(rescued)
 
               total_commits = len(unique_commits)
               
@@ -336,11 +351,9 @@ jobs:
               total_removed = sum(c['removed'] for c in unique_commits.values())
               
               raw_total = total_added + total_removed
-
               first_commit_date = min(c['date'] for c in unique_commits.values())
               first_commit_display = first_commit_date.split('T')[0] if first_commit_date else "N/A"
 
-              # Normalization constants and scoring thresholds
               P99_ADD = 290764.32000000024
               P99_DEL = 130211.56000000004
               P99_CMT = 536.5200000000004
@@ -366,7 +379,6 @@ jobs:
                   elif score >= SILVER_THRESHOLD: tier = "Silver"
                   else: tier = "Bronze"
 
-              # Aggregate per-repository statistics
               repo_stats = {}
               for sha, data in unique_commits.items():
                   r_name = data['repo']
@@ -427,7 +439,7 @@ jobs:
               exit 0
             fi
 
-            git commit -m "db(sys): update records for @${{ inputs.github_user }} [skip ci]"
+            git commit -m "db(sys): update records for @${{ github.event.client_payload.github_user }} [skip ci]"
 
             max_attempts=5
             attempt=1
@@ -459,4 +471,3 @@ jobs:
               exit 1
             fi
           fi
-          
