@@ -283,7 +283,7 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
           break;
       }
       
-      ctx.font = "200 55px 'Inter'"; 
+      ctx.font = "200 62px 'Inter'";
       const textLines = calculateLines(ctx, certText, 2100);
       const startY = 1840;
       const lineHeight = 95;
@@ -345,7 +345,7 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
       
       ctx.font = "italic 400 60px 'Inter'";
       const projectCount = certUser.stats?.project_count || 1;
-      ctx.fillText(`${projectCount} ${projectCount === 1 ? 'Repository' : 'Repositories'}`, 190, dynamicRepoY);
+      ctx.fillText(`${projectCount} ${Number(projectCount) === 1 ? 'Repository' : 'Repositories'}`, 190, dynamicRepoY);
       
       ctx.font = "bold 90px 'Montserrat'"; ctx.fillText("Meysam Bal-afkan", 190, 2850); ctx.fillText("Fatemeh Zahedi", 1510, 2850);
       ctx.font = "400 50px 'Inter'"; ctx.fillText("OWASP-CRT Project Leader", 190, 2930); ctx.fillText("OWASP-CRT Project Co-Leader", 1510, 2930);
