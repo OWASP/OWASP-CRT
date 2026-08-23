@@ -389,6 +389,7 @@ jobs:
                   repo_stats[r_name]['removed'] += data['removed']
 
               total_projects = len(repo_stats)
+              repo_list = list(repo_stats.keys())
 
               if os.path.exists(attempt_path):
                   try: os.remove(attempt_path)
@@ -408,7 +409,8 @@ jobs:
                       "merged_commits": str(total_commits),
                       "project_count": str(total_projects),
                       "lines_added": str(total_added), 
-                      "lines_removed": str(total_removed)
+                      "lines_removed": str(total_removed),
+                      "repositories": repo_list
                   }
               }
               
