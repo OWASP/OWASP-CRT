@@ -150,8 +150,6 @@ jobs:
                   for qualifier in ['org', 'user']:
                       queries_to_run.add(f"author:{user} {qualifier}:{org}")
                       queries_to_run.add(f'"{user}" {qualifier}:{org}')
-                      if github_real_name:
-                          queries_to_run.add(f'"{github_real_name}" {qualifier}:{org}')
 
               def search_rest_query(q_str):
                   local_commits = set()
@@ -312,19 +310,20 @@ jobs:
                           for a_edge in c.get('authors', {}).get('edges', []):
                               node = a_edge.get('node', {})
                               a_user = node.get('user')
+                              
+                              # 1. Strict validation: Verify the linked GitHub account's username
                               if a_user and a_user.get('login', '').lower() == user.lower():
                                   is_verified = True
                                   break
-                              if node.get('name', '').lower() == user.lower() or (github_real_name and node.get('name', '').lower() == github_real_name.lower()):
-                                  is_verified = True
-                                  break
                                   
+                          # 2. Strict validation for Co-authored-by or Signed-off-by commits
                           if not is_verified:
                               msg = c.get('message', '').lower()
                               u_lower = user.lower()
-                              r_lower = github_real_name.lower() if github_real_name else None
-                              if (u_lower in msg) or (r_lower and r_lower in msg):
-                                  if "co-authored-by:" in msg or "signed-off-by:" in msg:
+                              noreply_email = f"{u_lower}@users.noreply.github.com"
+                              
+                              if "co-authored-by:" in msg or "signed-off-by:" in msg:
+                                  if (f"<{u_lower}@" in msg) or (noreply_email in msg) or (f"@{u_lower}" in msg):
                                       is_verified = True
                                       
                           if is_verified:
