@@ -1,0 +1,18 @@
+{
+  "id": "126280926",
+  "user": "Dissent-ofc",
+  "real_name": "SHIVAM SHIVAM",
+  "tier": "Bronze",
+  "score": "0.000223",
+  "last_issued": 1787503689,
+  "stats": {
+    "first_commit_date": "2026-08-23",
+    "merged_commits": "1",
+    "project_count": "1",
+    "lines_added": "7",
+    "lines_removed": "8",
+    "repositories": [
+      "OWASP/OWASP-CRT"
+    ]
+  }
+}
