@@ -137,6 +137,12 @@ jobs:
               unique_commits = {}
               target_repos_dict = {}
               commits_to_fetch = set()
+              
+              # Pre-populate trusted emails cache
+              verified_emails_cache = {
+                  f"{user.lower()}@users.noreply.github.com": True,
+                  f"{user_id}+{user.lower()}@users.noreply.github.com": True
+              }
 
               # ==========================================
               # Phase 1: Deep REST Search (Threaded)
@@ -150,6 +156,8 @@ jobs:
                   for qualifier in ['org', 'user']:
                       queries_to_run.add(f"author:{user} {qualifier}:{org}")
                       queries_to_run.add(f'"{user}" {qualifier}:{org}')
+                      if raw_name and raw_name.lower() != user.lower():
+                          queries_to_run.add(f'"{raw_name}" {qualifier}:{org}')
 
               def search_rest_query(q_str):
                   local_commits = set()
@@ -238,7 +246,7 @@ jobs:
                   defaultBranchRef {
                     target { ... on Commit { history(author: { id: $authorId }, first: 100, after: $cursor) {
                       pageInfo { hasNextPage endCursor }
-                      edges { node { oid additions deletions committedDate } }
+                      edges { node { oid additions deletions committedDate author { email } } }
                     }}}
                   }
                 }
@@ -256,6 +264,11 @@ jobs:
                           
                           for edge in history.get('edges', []):
                               c = edge['node']
+                              
+                              # Extract known verified emails directly from GitHub's native metadata (Zero API overhead)
+                              if c.get('author') and c['author'].get('email'):
+                                  verified_emails_cache[c['author']['email'].lower()] = True
+                                  
                               local_c[c['oid']] = {
                                   'repo': repo_full, 'added': c['additions'], 'removed': c['deletions'],
                                   'date': c['committedDate'], 'type': 'Direct'
@@ -277,6 +290,27 @@ jobs:
               # Phase 4: Resolving Deep Search (Threaded)
               # ==========================================
               print("[*] Phase 4: Parallel Resolution of Squashed/Co-authored...")
+
+              def is_email_owned_by_user(email, expected_username):
+                  email = email.lower().strip()
+                  if not email or "@" not in email: return False
+                  if email in verified_emails_cache: return verified_emails_cache[email]
+                  
+                  # Fallback to slow API ONLY if email was never used in Phase 3
+                  try:
+                      search_url = f"https://api.github.com/search/users?q={urllib.parse.quote(email)}"
+                      req = urllib.request.Request(search_url, headers=search_headers)
+                      with urllib.request.urlopen(req) as response:
+                          res = json.loads(response.read().decode())
+                          if res.get('total_count', 0) > 0:
+                              found_login = res['items'][0]['login'].lower()
+                              is_owner = (found_login == expected_username.lower())
+                              verified_emails_cache[email] = is_owner
+                              return is_owner
+                  except: pass
+                  verified_emails_cache[email] = False
+                  return False
+
               commits_by_repo = {}
               for owner, repo_name, sha in commits_to_fetch:
                   if sha in unique_commits: continue
@@ -307,32 +341,40 @@ jobs:
                           if not c: continue
                           
                           is_verified = False
+                          
+                          # 1. Strict validation via GitHub's native author resolution
                           for a_edge in c.get('authors', {}).get('edges', []):
                               node = a_edge.get('node', {})
                               a_user = node.get('user')
-                              
-                              # 1. Strict validation: Verify the linked GitHub account's username
                               if a_user and a_user.get('login', '').lower() == user.lower():
                                   is_verified = True
                                   break
                                   
-                          # 2. Strict validation for Co-authored-by or Signed-off-by commits
+                          # 2. Strict validation for Signed-off-by (Cache-first approach)
                           if not is_verified:
                               msg = c.get('message', '').lower()
                               u_lower = user.lower()
-                              noreply_email = f"{u_lower}@users.noreply.github.com"
                               
-                              if "co-authored-by:" in msg or "signed-off-by:" in msg:
-                                  if (f"<{u_lower}@" in msg) or (noreply_email in msg) or (f"@{u_lower}" in msg):
-                                      is_verified = True
-                                      
+                              if "signed-off-by:" in msg or "co-authored-by:" in msg:
+                                  for line in msg.split('\n'):
+                                      line = line.strip()
+                                      if line.startswith("co-authored-by:") or line.startswith("signed-off-by:"):
+                                          
+                                          email_match = re.search(r'<([^>]+)>', line)
+                                          if email_match:
+                                              extracted_email = email_match.group(1)
+                                              if is_email_owned_by_user(extracted_email, u_lower):
+                                                  is_verified = True
+                                                  break
+                                                  
                           if is_verified:
                               local_c[sha] = {
                                   'repo': f"{owner}/{repo_name}", 'added': c.get('additions', 0),
                                   'removed': c.get('deletions', 0), 'date': c.get('committedDate', ''),
                                   'type': 'Resolved'
                               }
-                  except: pass
+                  except Exception:
+                      pass
                   return local_c
 
               with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
