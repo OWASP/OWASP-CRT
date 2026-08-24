@@ -3,13 +3,17 @@
   "user": "Galaxy-sc",
   "real_name": "Meysam Bal-afkan",
   "tier": "Gold",
-  "score": "0.023594",
-  "last_issued": 1787416216,
+  "score": "0.024514",
+  "last_issued": 1787559753,
   "stats": {
     "first_commit_date": "2025-12-30",
-    "merged_commits": "44",
+    "merged_commits": "48",
     "project_count": "2",
-    "lines_added": "6538",
-    "lines_removed": "1351"
+    "lines_added": "6602",
+    "lines_removed": "1372",
+    "repositories": [
+      "OWASP/wstg",
+      "OWASP/OWASP-CRT"
+    ]
   }
 }
