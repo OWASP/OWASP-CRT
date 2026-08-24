@@ -2,16 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { jsPDF } from "jspdf";
 
 const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryData, certId }) => {
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
+  
   const [tData, setTData] = useState({
-    status: 'STANDBY', commits: '--', projects: '--', added: '--', removed: '--',
+    status: 'STANDBY', commits: '--', projects: '--', added: '--', removed: '--', repositories: [],
     bars: { commits: 0, projects: 0, added: 0, removed: 0, tier: '0%' }, 
     tierText: 'System scanning for parameters...', nextTier: 'AWAITING IDENTITY',
-    tierColor: '#4a7bfe', nextColor: '#9d4edd'
+    tierColor: '#4a7bfe', nextColor: '#9d4edd', currentTier: 'BRONZE'
   });
+  
   const [isTouchMode, setIsTouchMode] = useState(false);
 
   useEffect(() => {
-    // Enable single-click mode for touch devices and screens under 1200px
     const checkMode = () => {
       setIsTouchMode(
         window.innerWidth <= 1200 || 
@@ -29,9 +31,9 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
   useEffect(() => {
     if (telemetryData) {
       const { tier, stats } = telemetryData;
-      setTData(p => ({ ...p, status: 'CONNECTED' }));
+      const currentTier = (tier || "BRONZE").toUpperCase();
       
-      let currentTier = (tier || "").toUpperCase();
+      setTData(p => ({ ...p, status: 'CONNECTED', currentTier }));
       
       let cFill = 0; let pFill = 0; let lFill = 0;
       if (currentTier === 'BRONZE') { cFill = 4; pFill = 3; lFill = 41; }
@@ -40,6 +42,7 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
 
       setTimeout(() => setTData(p => ({ ...p, commits: stats.merged_commits || '0', bars: { ...p.bars, commits: cFill } })), 500);
       setTimeout(() => setTData(p => ({ ...p, projects: stats.project_count || '0', bars: { ...p.bars, projects: pFill } })), 900);
+      setTimeout(() => setTData(p => ({ ...p, repositories: stats.repositories || [] })), 1100);
       setTimeout(() => setTData(p => ({ ...p, added: '+' + (stats.lines_added || '0'), bars: { ...p.bars, added: lFill } })), 1300);
       setTimeout(() => setTData(p => ({ ...p, removed: '-' + (stats.lines_removed || '0'), bars: { ...p.bars, removed: lFill } })), 1700);
       
@@ -93,16 +96,13 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
       return;
     }
 
-    // 1. Set certificate name based on user Tier
     const tier = (telemetryData?.tier || "Bronze").toUpperCase();
     let certName = "OWASP Verified Contributor";
     if (tier === 'SILVER') certName = "OWASP Advanced Contributor";
     if (tier === 'GOLD') certName = "OWASP Elite Contributor";
 
-    // 2. Official organization name
     const organizationName = "OWASP® Foundation";
     
-    // 3. Read exact date from telemetry data
     let issueYear = new Date().getFullYear();
     let issueMonth = new Date().getMonth() + 1;
 
@@ -118,174 +118,238 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
     }
 
     const certUrl = `https://crt.owasp.org/?id=${certId}`;
-
-    // Compile final LinkedIn URL
     const linkedInUrl = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(certName)}&organizationName=${encodeURIComponent(organizationName)}&issueYear=${issueYear}&issueMonth=${issueMonth}&certUrl=${encodeURIComponent(certUrl)}&certId=${encodeURIComponent(certId)}`;
     
     window.open(linkedInUrl, '_blank');
   };
 
   const handleIconClick = (action) => {
-    if (isTouchMode) {
-      action();
-    }
+    if (isTouchMode) action();
   };
 
   const handleIconDoubleClick = (action) => {
-    if (!isTouchMode) {
-      action();
-    }
+    if (!isTouchMode) action();
   };
 
   return (
-    <div id="desktop" className="absolute top-[85px] left-0 w-full h-[calc(100%-85px)] z-10 max-md:top-[60px] max-md:h-[calc(100%-60px)]">
+    <div id="desktop" className="absolute top-[85px] left-0 w-full h-[calc(100dvh-85px)] z-10 max-md:top-[60px] max-md:h-[calc(100dvh-60px)] overflow-hidden">
       
-      {/* Telemetry Panel (Desktop Only) */}
-      <div className="absolute right-[20px] top-[20px] w-[320px] bg-[#0b0d13]/95 backdrop-blur-xl border border-[rgba(255,255,255,0.06)] rounded-[14px] p-[16px] font-['Fira_Code',monospace] shadow-[0_20px_40px_rgba(0,0,0,0.8)] z-50 transition-all duration-700 hidden md:block">
-        <div className="flex justify-between items-center mb-[16px]">
-          <div className="text-[10px] text-white tracking-[1.5px] font-bold">
-            CONTRIBUTOR_TELEMETRY
+      {/* Telemetry Bottom Sheet */}
+      <div 
+        className={`
+          z-[100] bg-[#0b0d13]/95 backdrop-blur-xl border border-[rgba(255,255,255,0.06)] font-['Fira_Code',monospace] 
+          shadow-[0_-10px_40px_rgba(0,0,0,0.5)] transition-[max-height] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] 
+          flex flex-col overflow-hidden
+          
+          /* Desktop */
+          md:absolute md:right-[20px] md:top-[20px] md:w-[320px] md:rounded-[14px] md:max-h-[calc(100%-40px)]
+          
+          /* Mobile */
+          max-md:fixed max-md:left-0 max-md:bottom-0 max-md:w-full max-md:rounded-t-[24px] max-md:border-x-0 max-md:border-b-0
+          ${isMobileExpanded ? 'max-md:max-h-[85dvh]' : 'max-md:max-h-[105px]'}
+        `}
+      >
+        
+        {/* Expandable Header */}
+        <div 
+          className={`shrink-0 transition-colors md:p-[16px] max-md:p-[15px] max-md:pt-[12px] max-md:h-[105px] ${isTouchMode ? 'cursor-pointer hover:bg-white/[0.02] active:bg-white/[0.04]' : ''}`}
+          onClick={() => {
+            if (isTouchMode || window.innerWidth <= 768) setIsMobileExpanded(!isMobileExpanded);
+          }}
+        >
+          {/* Chevron Indicator */}
+          <svg 
+            className={`md:hidden w-[40px] h-[12px] mx-auto mb-3 text-white/30 transition-transform duration-500 ${isMobileExpanded ? 'rotate-180' : 'animate-[bounce_2s_infinite]'}`}
+            fill="none" viewBox="0 0 24 8" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"
+          >
+            <polyline points="2,7 12,2 22,7" />
+          </svg>
+
+          {/* Title Area */}
+          <div className="flex justify-between items-center">
+            <div className="text-[10px] text-white tracking-[1.5px] font-bold">
+              CONTRIBUTOR_TELEMETRY
+            </div>
+            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] text-[8.5px] tracking-wide border ${tData.status === 'CONNECTED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+              {tData.status}
+              <div className={`w-1 h-1 rounded-full ${tData.status === 'CONNECTED' ? 'bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse' : 'bg-red-500 shadow-[0_0_6px_#ef4444]'}`}></div>
+            </div>
           </div>
-          <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-[4px] text-[8.5px] tracking-wide border ${tData.status === 'CONNECTED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
-            {tData.status}
-            <div className={`w-1 h-1 rounded-full ${tData.status === 'CONNECTED' ? 'bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse' : 'bg-red-500 shadow-[0_0_6px_#ef4444]'}`}></div>
+
+          {/* Collapsed State Summary */}
+          <div className={`md:hidden flex justify-between items-center transition-all duration-300 mt-2 ${isMobileExpanded ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <div className="flex gap-6">
+              <div>
+                <div className="text-[8px] text-slate-400 mb-0.5">COMMITS</div>
+                <div className="text-[14px] text-white font-bold leading-none">{tData.commits}</div>
+              </div>
+              <div>
+                <div className="text-[8px] text-slate-400 mb-0.5">CURRENT TIER</div>
+                <div className="text-[14px] font-bold leading-none drop-shadow-md" style={{color: tData.tierColor}}>{tData.currentTier}</div>
+              </div>
+            </div>
+            <div className="text-[9px] text-purple-400 font-bold uppercase tracking-wide pr-1">
+              Tap to Expand
+            </div>
           </div>
         </div>
 
-        <div className="flex gap-2.5 mb-2.5">
-          <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-[8px] p-2.5 relative overflow-hidden group hover:bg-white/[0.04] transition-colors">
-            <div className="flex items-start gap-2.5">
-              <div className="w-6 h-6 rounded-[5px] border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0">
-                <svg className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </div>
-              <div>
-                <div className="text-[7.5px] text-slate-400 mb-0.5 whitespace-nowrap">VERIFIED COMMITS</div>
-                <div className="text-[15px] text-white font-semibold leading-tight">{tData.commits}</div>
-              </div>
-            </div>
-            <div className="flex gap-[2px] h-[3px] mt-2.5 opacity-90">
-              {[...Array(10)].map((_, i) => (
-                <div key={i} className={`flex-1 rounded-[1px] transition-colors duration-500 ${i < tData.bars.commits ? 'bg-purple-500 shadow-[0_0_4px_rgba(168,85,247,0.5)]' : 'bg-purple-500/10'}`}></div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-[8px] p-2.5 relative overflow-hidden group hover:bg-white/[0.04] transition-colors">
-            <div className="flex items-start gap-2.5">
-              <div className="w-6 h-6 rounded-[5px] border border-blue-500/30 flex items-center justify-center bg-blue-500/10 shrink-0">
-                <svg className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
-              </div>
-              <div>
-                <div className="text-[7.5px] text-slate-400 mb-0.5 whitespace-nowrap">PROJECTS INVOLVED</div>
-                <div className="text-[15px] text-white font-semibold leading-tight">{tData.projects}</div>
-              </div>
-            </div>
-            <div className="flex gap-[2px] h-[3px] mt-2.5 opacity-90">
-              {[...Array(10)].map((_, i) => (
-                <div key={i} className={`flex-1 rounded-[1px] transition-colors duration-500 ${i < tData.bars.projects ? 'bg-blue-500 shadow-[0_0_4px_rgba(59,130,246,0.5)]' : 'bg-blue-500/10'}`}></div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white/[0.02] border border-white/5 rounded-[8px] p-2.5 mb-2.5 relative overflow-hidden group hover:bg-white/[0.04] transition-colors">
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-[6px] border border-emerald-500/30 flex items-center justify-center bg-emerald-500/10 shrink-0">
-                <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-              </div>
-              <div>
-                <div className="text-[8px] text-emerald-400/80 mb-0.5 font-semibold tracking-wide">LINES ADDED</div>
-                <div className="text-[18px] text-white font-semibold leading-none">{tData.added}</div>
-              </div>
-            </div>
-            <div className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-[4px] text-emerald-400 text-[8.5px] font-bold">
-              {tData.added}
-            </div>
-          </div>
-          <div className="flex items-end gap-[2px] h-[20px] mt-2 px-0.5">
-            {[4, 5, 6, 8, 11, 15, 20, 26, 33, 41, 50, 60, 71, 83, 96, 100].map((h, i) => (
-              <div 
-                key={i}
-                className="flex-1 bg-emerald-400 rounded-t-[1px] transition-all duration-700 ease-out"
-                style={{
-                  height: h <= tData.bars.added ? `${h}%` : '10%',
-                  opacity: h <= tData.bars.added ? (h > 40 ? 1 : 0.3) : 0.1
-                }}
-              ></div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white/[0.02] border border-white/5 rounded-[8px] p-2.5 mb-4 relative overflow-hidden group hover:bg-white/[0.04] transition-colors">
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-[6px] border border-rose-500/30 flex items-center justify-center bg-rose-500/10 shrink-0">
-                <svg className="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" /></svg>
-              </div>
-              <div>
-                <div className="text-[8px] text-rose-400/80 mb-0.5 font-semibold tracking-wide">LINES REMOVED</div>
-                <div className="text-[18px] text-white font-semibold leading-none">{tData.removed}</div>
-              </div>
-            </div>
-            <div className="px-2 py-0.5 bg-rose-500/10 border border-rose-500/20 rounded-[4px] text-rose-400 text-[8.5px] font-bold">
-              {tData.removed}
-            </div>
-          </div>
-          <div className="flex items-start gap-[2px] h-[20px] mt-2 px-0.5">
-            {[4, 5, 6, 8, 11, 15, 20, 26, 33, 41, 50, 60, 71, 83, 96, 100].map((h, i) => (
-              <div 
-                key={i}
-                className="flex-1 bg-rose-400 rounded-b-[1px] transition-all duration-700 ease-out"
-                style={{
-                  height: h <= tData.bars.removed ? `${h}%` : '10%',
-                  opacity: h <= tData.bars.removed ? (h > 40 ? 1 : 0.3) : 0.1
-                }}
-              ></div>
-            ))}
-          </div>
-        </div>
-
-        <div className="pt-4 border-t border-dashed border-white/10 px-1">
-          <div className="flex justify-between items-center mb-3.5">
-            <div className="flex items-center gap-2.5">
-              <div 
-                className="w-8 h-8 rounded-[6px] border flex items-center justify-center shrink-0 transition-all duration-1000"
-                style={{ borderColor: `${tData.nextColor}40`, backgroundColor: `${tData.nextColor}10`, color: tData.nextColor }}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v8l9-11h-7z" /></svg>
-              </div>
-              <div>
-                <div className="text-[7.5px] text-slate-400 mb-0.5 tracking-wider">NEXT TIER TARGET</div>
-                <div className="text-[16px] font-bold tracking-wide transition-colors duration-1000" style={{color: tData.nextColor}}>
-                  {tData.nextTier}
+        {/* Scrollable Content Area */}
+        <div className="flex-1 flex flex-col custom-scrollbar overflow-y-auto px-[16px] pb-[16px] max-md:px-[15px] max-md:pb-[env(safe-area-inset-bottom,15px)]">
+          
+          <div className="flex gap-2.5 mb-2.5 shrink-0">
+            <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-[8px] p-2.5 relative overflow-hidden group hover:bg-white/[0.04] transition-colors">
+              <div className="flex items-start gap-2.5">
+                <div className="w-6 h-6 rounded-[5px] border border-purple-500/30 flex items-center justify-center bg-purple-500/10 shrink-0">
+                  <svg className="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <div>
+                  <div className="text-[7.5px] text-slate-400 mb-0.5 whitespace-nowrap">VERIFIED COMMITS</div>
+                  <div className="text-[15px] text-white font-semibold leading-tight">{tData.commits}</div>
                 </div>
               </div>
+              <div className="flex gap-[2px] h-[3px] mt-2.5 opacity-90">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className={`flex-1 rounded-[1px] transition-colors duration-500 ${i < tData.bars.commits ? 'bg-purple-500 shadow-[0_0_4px_rgba(168,85,247,0.5)]' : 'bg-purple-500/10'}`}></div>
+                ))}
+              </div>
             </div>
-            <div className="text-[20px] text-white font-bold">
-              {tData.bars.tier.replace('%', '')}<span className="text-[11px] text-slate-400 font-medium">%</span>
+
+            <div className="flex-1 bg-white/[0.02] border border-white/5 rounded-[8px] p-2.5 relative overflow-hidden group hover:bg-white/[0.04] transition-colors">
+              <div className="flex items-start gap-2.5">
+                <div className="w-6 h-6 rounded-[5px] border border-blue-500/30 flex items-center justify-center bg-blue-500/10 shrink-0">
+                  <svg className="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" /></svg>
+                </div>
+                <div>
+                  <div className="text-[7.5px] text-slate-400 mb-0.5 whitespace-nowrap">PROJECTS INVOLVED</div>
+                  <div className="text-[15px] text-white font-semibold leading-tight">{tData.projects}</div>
+                </div>
+              </div>
+              <div className="flex gap-[2px] h-[3px] mt-2.5 opacity-90">
+                {[...Array(10)].map((_, i) => (
+                  <div key={i} className={`flex-1 rounded-[1px] transition-colors duration-500 ${i < tData.bars.projects ? 'bg-blue-500 shadow-[0_0_4px_rgba(59,130,246,0.5)]' : 'bg-blue-500/10'}`}></div>
+                ))}
+              </div>
             </div>
           </div>
-          
-          <div className="w-full h-[8px] bg-black/60 rounded-full overflow-hidden border border-white/5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
-            <div 
-              className="h-full rounded-full transition-all duration-[2000ms] ease-[cubic-bezier(0.1,0.5,0.2,1)] relative"
-              style={{
-                background: `linear-gradient(90deg, ${tData.tierColor}, ${tData.nextColor})`,
-                width: tData.bars.tier,
-                boxShadow: `0 0 8px ${tData.nextColor}40`
-              }}
-            ></div>
+
+          <div className="bg-white/[0.02] border border-white/5 rounded-[8px] p-2.5 mb-2.5 relative overflow-hidden shrink-0 group hover:bg-white/[0.04] transition-colors">
+            <div className="flex justify-between items-center mb-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-[6px] border border-emerald-500/30 flex items-center justify-center bg-emerald-500/10 shrink-0">
+                  <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                </div>
+                <div>
+                  <div className="text-[8px] text-emerald-400/80 mb-0.5 font-semibold tracking-wide">LINES ADDED</div>
+                  <div className="text-[18px] text-white font-semibold leading-none">{tData.added}</div>
+                </div>
+              </div>
+              <div className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-[4px] text-emerald-400 text-[8.5px] font-bold">
+                {tData.added}
+              </div>
+            </div>
+            <div className="flex items-end gap-[2px] h-[20px] mt-2 px-0.5">
+              {[4, 5, 6, 8, 11, 15, 20, 26, 33, 41, 50, 60, 71, 83, 96, 100].map((h, i) => (
+                <div 
+                  key={i}
+                  className="flex-1 bg-emerald-400 rounded-t-[1px] transition-all duration-700 ease-out"
+                  style={{ height: h <= tData.bars.added ? `${h}%` : '10%', opacity: h <= tData.bars.added ? (h > 40 ? 1 : 0.3) : 0.1 }}
+                ></div>
+              ))}
+            </div>
           </div>
-          
-          <div className="text-center text-[9px] text-slate-500 mt-3 font-medium">
-            {tData.tierText}
+
+          <div className="bg-white/[0.02] border border-white/5 rounded-[8px] p-2.5 mb-2.5 relative overflow-hidden shrink-0 group hover:bg-white/[0.04] transition-colors">
+            <div className="flex justify-between items-center mb-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-[6px] border border-rose-500/30 flex items-center justify-center bg-rose-500/10 shrink-0">
+                  <svg className="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" /></svg>
+                </div>
+                <div>
+                  <div className="text-[8px] text-rose-400/80 mb-0.5 font-semibold tracking-wide">LINES REMOVED</div>
+                  <div className="text-[18px] text-white font-semibold leading-none">{tData.removed}</div>
+                </div>
+              </div>
+              <div className="px-2 py-0.5 bg-rose-500/10 border border-rose-500/20 rounded-[4px] text-rose-400 text-[8.5px] font-bold">
+                {tData.removed}
+              </div>
+            </div>
+            <div className="flex items-start gap-[2px] h-[20px] mt-2 px-0.5">
+              {[4, 5, 6, 8, 11, 15, 20, 26, 33, 41, 50, 60, 71, 83, 96, 100].map((h, i) => (
+                <div 
+                  key={i}
+                  className="flex-1 bg-rose-400 rounded-b-[1px] transition-all duration-700 ease-out"
+                  style={{ height: h <= tData.bars.removed ? `${h}%` : '10%', opacity: h <= tData.bars.removed ? (h > 40 ? 1 : 0.3) : 0.1 }}
+                ></div>
+              ))}
+            </div>
           </div>
+
+          <div className="bg-white/[0.02] border border-white/5 rounded-[8px] p-2.5 mb-4 relative overflow-hidden shrink-0 group hover:bg-white/[0.04] transition-colors">
+            <div className="flex items-center gap-2.5 mb-2">
+              <div className="w-6 h-6 rounded-[5px] border border-cyan-500/30 flex items-center justify-center bg-cyan-500/10 shrink-0">
+                <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+              </div>
+              <div className="text-[8px] text-cyan-400/80 font-semibold tracking-wide">REPOSITORIES</div>
+            </div>
+            <div className="max-h-[72px] overflow-y-auto pr-1 flex flex-col gap-1 custom-scrollbar" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
+              {tData.repositories && tData.repositories.length > 0 ? (
+                tData.repositories.map((repo, idx) => (
+                  <div key={idx} className="shrink-0 text-[10.5px] text-slate-300 bg-white/[0.03] px-2 py-1.5 rounded-[4px] border border-white/5 truncate hover:text-white hover:bg-white/[0.08] transition-colors cursor-default">
+                    {repo}
+                  </div>
+                ))
+              ) : (
+                <div className="text-[10px] text-slate-500 italic px-2 py-1">Awaiting data stream...</div>
+              )}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-dashed border-white/10 px-1 shrink-0">
+            <div className="flex justify-between items-center mb-3.5">
+              <div className="flex items-center gap-2.5">
+                <div 
+                  className="w-8 h-8 rounded-[6px] border flex items-center justify-center shrink-0 transition-all duration-1000"
+                  style={{ borderColor: `${tData.nextColor}40`, backgroundColor: `${tData.nextColor}10`, color: tData.nextColor }}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v8l9-11h-7z" /></svg>
+                </div>
+                <div>
+                  <div className="text-[7.5px] text-slate-400 mb-0.5 tracking-wider">NEXT TIER TARGET</div>
+                  <div className="text-[16px] font-bold tracking-wide transition-colors duration-1000" style={{color: tData.nextColor}}>
+                    {tData.nextTier}
+                  </div>
+                </div>
+              </div>
+              <div className="text-[20px] text-white font-bold">
+                {tData.bars.tier.replace('%', '')}<span className="text-[11px] text-slate-400 font-medium">%</span>
+              </div>
+            </div>
+            
+            <div className="w-full h-[8px] bg-black/60 rounded-full overflow-hidden border border-white/5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]">
+              <div 
+                className="h-full rounded-full transition-all duration-[2000ms] ease-[cubic-bezier(0.1,0.5,0.2,1)] relative"
+                style={{ background: `linear-gradient(90deg, ${tData.tierColor}, ${tData.nextColor})`, width: tData.bars.tier, boxShadow: `0 0 8px ${tData.nextColor}40` }}
+              ></div>
+            </div>
+            
+            <div className="text-center text-[9px] text-slate-500 mt-3 font-medium">
+              {tData.tierText}
+            </div>
+          </div>
+
+          {/* Close Panel Button */}
+          <button 
+            className="md:hidden mt-5 w-full py-3 bg-white/[0.03] border border-white/10 rounded-[8px] text-slate-400 hover:text-white text-[10px] font-bold tracking-widest active:bg-white/10 shrink-0 transition-colors flex items-center justify-center gap-2"
+            onClick={(e) => { e.stopPropagation(); setIsMobileExpanded(false); }}
+          >
+            <span>CLOSE PANEL</span>
+          </button>
         </div>
       </div>
 
-      {/* Desktop Icons Area */}
-      <div className="flex flex-col gap-[30px] p-[30px] max-md:p-[15px] max-md:gap-[15px] max-md:flex-row max-md:flex-wrap">
+      {/* Desktop Icons Container */}
+      <div className="flex flex-col gap-[30px] p-[30px] max-md:p-[15px] max-md:pb-[130px] max-md:gap-[15px] max-md:flex-row max-md:flex-wrap">
         
         <div className="relative w-[90px] inline-block">
           <div 
@@ -304,10 +368,6 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
 
         <div className="relative w-[90px] inline-block">
           <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full p-[15px] rounded-[12px] opacity-0 pointer-events-none z-[1] border-2 border-[#ff2a5f] ${tutorialStep === 1 ? 'animate-[pingRing_1.5s_cubic-bezier(0,0,0.2,1)_infinite] opacity-100' : ''}`}></div>
-          <div className={`absolute left-[105px] top-1/2 -translate-y-1/2 w-[260px] bg-[rgba(15,17,26,0.95)] backdrop-blur-[10px] py-3 px-4 rounded-[8px] z-[10000] shadow-[0_10px_30px_rgba(0,0,0,0.8)] transition-opacity duration-300 max-md:hidden border border-[#ff2a5f] shadow-[0_0_20px_rgba(255,42,95,0.15)] before:content-[''] before:absolute before:left-[-6px] before:top-1/2 before:-translate-y-1/2 before:rotate-45 before:w-3 before:h-3 before:bg-[rgba(15,17,26,0.95)] before:border-l-[inherit] before:border-b-[inherit] before:border-l-[#ff2a5f] before:border-b-[#ff2a5f] ${tutorialStep === 1 ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
-            <div className="font-['Fira_Code',monospace] text-[11px] font-bold mb-1 text-[#ff2a5f]">STEP 1: INITIALIZE</div>
-            <div className="text-[11px] leading-relaxed text-slate-300">Double-click the letter icon to read your appreciation message.</div>
-          </div>
           <div 
             className="w-full text-center cursor-pointer p-3 rounded-[8px] transition-all duration-200 border border-transparent relative z-10 hover:bg-[rgba(157,78,221,0.15)] hover:border-[rgba(157,78,221,0.3)] group"
             onClick={() => handleIconClick(() => { toggleWindow('letter'); advanceTutorial(2); })}
@@ -320,10 +380,6 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
 
         <div className="relative w-[90px] inline-block">
           <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full p-[15px] rounded-[12px] opacity-0 pointer-events-none z-[1] border-2 border-[#9d4edd] ${tutorialStep === 2 ? 'animate-[pingRing_1.5s_cubic-bezier(0,0,0.2,1)_infinite] opacity-100' : ''}`}></div>
-          <div className={`absolute left-[105px] top-1/2 -translate-y-1/2 w-[260px] bg-[rgba(15,17,26,0.95)] backdrop-blur-[10px] py-3 px-4 rounded-[8px] z-[10000] shadow-[0_10px_30px_rgba(0,0,0,0.8)] transition-opacity duration-300 max-md:hidden border border-[#9d4edd] shadow-[0_0_20px_rgba(157,78,221,0.15)] before:content-[''] before:absolute before:left-[-6px] before:top-1/2 before:-translate-y-1/2 before:rotate-45 before:w-3 before:h-3 before:bg-[rgba(15,17,26,0.95)] before:border-l-[inherit] before:border-b-[inherit] before:border-l-[#9d4edd] before:border-b-[#9d4edd] ${tutorialStep === 2 ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
-            <div className="font-['Fira_Code',monospace] text-[11px] font-bold mb-1 text-[#9d4edd]">STEP 2: PROVISION</div>
-            <div className="text-[11px] leading-relaxed text-slate-300">Execution authorized. Double-click the provisioning terminal.</div>
-          </div>
           <div 
             className="w-full text-center cursor-pointer p-3 rounded-[8px] transition-all duration-200 border border-transparent relative z-10 hover:bg-[rgba(157,78,221,0.15)] hover:border-[rgba(157,78,221,0.3)] group"
             onClick={() => handleIconClick(() => { toggleWindow('tool'); advanceTutorial(3); })}
