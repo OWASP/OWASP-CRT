@@ -64,13 +64,13 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
 
   const handleGeneratePDF = () => {
     if (!certId) {
-      alert("[!] SYSTEM ERROR: No valid identity parameter (?id=) found. Access Denied.");
+      alert("No certificate is loaded yet. Run CRT_Gen.sh to generate your certificate, then export it as a PDF.");
       return;
     }
 
     const canvas = document.getElementById('cert-canvas');
     if (!canvas) {
-      alert("[!] SYSTEM ERROR: Certificate matrix is not loaded. Please open Identity Viewer first.");
+      alert("Your certificate is still rendering. Wait for the certificate window to finish loading, then try again.");
       return;
     }
 
@@ -86,13 +86,13 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
       pdf.save(`OWASP_CRT_Certificate_${certId}.pdf`);
     } catch (err) {
       console.error(err);
-      alert("[!] ERROR: Failed to compile PDF sequence.");
+      alert("The PDF could not be created. Please try again, and open an issue on GitHub if it keeps happening.");
     }
   };
 
   const handleAddToLinkedIn = () => {
     if (!certId) {
-      alert("[!] SYSTEM ERROR: Cannot add to LinkedIn without a valid identity.");
+      alert("No certificate is loaded yet. Run CRT_Gen.sh to generate your certificate before adding it to LinkedIn.");
       return;
     }
 
@@ -395,7 +395,7 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
             className={`w-full text-center cursor-pointer p-3 rounded-[8px] transition-all duration-200 border border-transparent relative z-10 hover:bg-[rgba(157,78,221,0.15)] hover:border-[rgba(157,78,221,0.3)] group ${!certId ? 'opacity-50 grayscale' : ''}`}
             onClick={() => handleIconClick(handleGeneratePDF)}
             onDoubleClick={() => handleIconDoubleClick(handleGeneratePDF)}
-            title={!certId ? "Requires valid ?id= parameter" : "Export Certificate to PDF"}
+            title={!certId ? "Run CRT_Gen.sh to generate your certificate first" : "Export Certificate to PDF"}
           >
             <svg className={`w-[42px] h-[42px] mx-auto mb-2.5 stroke-[1.2] fill-none transition-all duration-300 ${!certId ? 'stroke-slate-600' : 'stroke-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)] group-hover:stroke-[#ff2a5f] group-hover:drop-shadow-[0_0_12px_rgba(255,42,95,0.7)]'}`} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -414,7 +414,7 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
             className={`w-full text-center cursor-pointer p-3 rounded-[8px] transition-all duration-200 border border-transparent relative z-10 hover:bg-[#0077b5]/15 hover:border-[#0077b5]/30 group ${!certId ? 'opacity-50 grayscale' : ''}`}
             onClick={() => handleIconClick(handleAddToLinkedIn)}
             onDoubleClick={() => handleIconDoubleClick(handleAddToLinkedIn)}
-            title={!certId ? "Requires valid ?id= parameter" : "Add this certificate to your LinkedIn profile"}
+            title={!certId ? "Run CRT_Gen.sh to generate your certificate first" : "Add this certificate to your LinkedIn profile"}
           >
             <svg className={`w-[42px] h-[42px] mx-auto mb-2.5 stroke-[1.2] fill-none transition-all duration-300 ${!certId ? 'stroke-slate-600' : 'stroke-[#0077b5] drop-shadow-[0_0_8px_rgba(0,119,181,0.5)] group-hover:stroke-[#00a0dc] group-hover:drop-shadow-[0_0_12px_rgba(0,160,220,0.7)]'}`} viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
               <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
