@@ -106,27 +106,66 @@ export default {
       const verifiedUserId = userData.id.toString();
       const safeFullName = stateName || verifiedUsername;
 
-      // Edge Validation: Check 24-hour rate limit before dispatching action
+      // Edge Validation: Check 24-hour rate limit before dispatching action.
+      // This mirrors the cooldown the generate-certificate workflow applies, which
+      // reads both the issued certificate and the last failed attempt. Checking only
+      // the certificate here let a rate-limited attempt through: the dispatch fired,
+      // the workflow aborted immediately, and the frontend was left polling a record
+      // that never changed, which is the silent failure reported in #25.
       const COOLDOWN_SECONDS = 86400; 
       const nowSeconds = Math.floor(Date.now() / 1000);
-      const checkCertUrl = `https://api.github.com/repos/${env.REPO_OWNER}/${env.REPO_NAME}/contents/certs/${verifiedUserId}.json?ref=data`;
-      
-      const certCheckRes = await fetch(checkCertUrl, {
-        headers: {
-          "Accept": "application/vnd.github.v3+json",
-          "Authorization": `Bearer ${env.ADMIN_GITHUB_PAT}`,
-          "User-Agent": "OWASP-CRT-App"
-        }
-      });
 
-      if (certCheckRes.ok) {
-        const certData = await certCheckRes.json();
-        const decodedContent = JSON.parse(decodeURIComponent(escape(atob(certData.content))));
-        const lastIssued = decodedContent.last_issued || 0;
-        if (nowSeconds - lastIssued < COOLDOWN_SECONDS) {
-           const hoursLeft = Math.ceil((COOLDOWN_SECONDS - (nowSeconds - lastIssued)) / 3600);
-           throw new Error(`Rate Limit Exceeded: You must wait ${hoursLeft} hours before requesting a new certificate.`);
+      const readDataRecord = async (path) => {
+        const res = await fetch(
+          `https://api.github.com/repos/${env.REPO_OWNER}/${env.REPO_NAME}/contents/${path}?ref=data`,
+          {
+            headers: {
+              "Accept": "application/vnd.github.v3+json",
+              "Authorization": `Bearer ${env.ADMIN_GITHUB_PAT}`,
+              "User-Agent": "OWASP-CRT-App"
+            }
+          }
+        );
+
+        if (!res.ok) return null;
+
+        try {
+          const meta = await res.json();
+          return JSON.parse(decodeURIComponent(escape(atob(meta.content))));
+        } catch {
+          return null;
         }
+      };
+
+      let cooldownSince = 0;
+      let blockedByFailedAttempt = false;
+
+      const certRecord = await readDataRecord(`certs/${verifiedUserId}.json`);
+      if (certRecord) {
+        cooldownSince = Math.max(cooldownSince, certRecord.last_issued || 0);
+      }
+
+      const attemptRecord = await readDataRecord(`attempts/${verifiedUserId}.json`);
+      if (attemptRecord) {
+        const attemptMessage = String(attemptRecord.message || "");
+        const attemptCountsAgainstCooldown =
+          attemptRecord.apply_limit === true || attemptMessage.includes("No verified commits");
+        const lastAttempt = attemptRecord.last_attempt || 0;
+
+        if (attemptCountsAgainstCooldown && lastAttempt > cooldownSince) {
+          cooldownSince = lastAttempt;
+          blockedByFailedAttempt = attemptMessage.includes("No verified commits");
+        }
+      }
+
+      if (cooldownSince > 0 && nowSeconds - cooldownSince < COOLDOWN_SECONDS) {
+        const hoursLeft = Math.ceil((COOLDOWN_SECONDS - (nowSeconds - cooldownSince)) / 3600);
+
+        if (blockedByFailedAttempt) {
+          throw new Error(`No verified commits were found for your account in the OWASP or GenAI Security Project repositories. You can try again in ${hoursLeft} hours.`);
+        }
+
+        throw new Error(`Rate Limit Exceeded: You must wait ${hoursLeft} hours before requesting a new certificate.`);
       }
 
       // Dispatch GitHub Action via Repository Dispatch (Sending User Token Securely)
