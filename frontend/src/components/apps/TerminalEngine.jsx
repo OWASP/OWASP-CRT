@@ -182,7 +182,18 @@ const TerminalEngine = ({ startFlow }) => {
 
   const handleFirstNameEnter = (e) => {
     if (e.key === 'Enter') {
-      if (!firstName.trim()) return;
+      const cleanFirst = firstName.trim().replace(/\s+/g, ' ');
+      if (!cleanFirst) return;
+      if (cleanFirst.length < 2) {
+        setErrorMsg('[!] Error: First name must be at least 2 characters.');
+        return;
+      }
+      if (cleanFirst.length > 20) {
+        setErrorMsg(`[!] Error: First name exceeds the 20-character limit (${cleanFirst.length}/20).`);
+        return;
+      }
+      setErrorMsg('');
+      setFirstName(cleanFirst);
       setTermState(2);
       setTimeout(() => lastNameRef.current?.focus(), 50);
     }
@@ -190,8 +201,9 @@ const TerminalEngine = ({ startFlow }) => {
 
   const handleLastNameEnter = (e) => {
     if (e.key === 'Enter') {
-      if (!lastName.trim()) return;
-      const totalFullName = firstName.trim() + " " + lastName.trim();
+      const cleanFirst = firstName.trim().replace(/\s+/g, ' ');
+      const cleanLast = lastName.trim().replace(/\s+/g, ' ');
+      const totalFullName = cleanLast ? `${cleanFirst} ${cleanLast}` : cleanFirst;
       
       if (totalFullName.length > 20) {
         setErrorMsg(`[!] Error: Full name exceeds the 20-character limit (${totalFullName.length}/20).`);
@@ -201,8 +213,8 @@ const TerminalEngine = ({ startFlow }) => {
       
       setHistory(p => [
         ...p,
-        <span key={`in1-${Date.now()}`} className="block mb-1"><span style={{color: '#9d4edd'}}>Enter First Name: </span>{firstName.trim()}</span>,
-        <span key={`in3-${Date.now()}`} className="block mb-4"><span style={{color: '#9d4edd'}}>Enter Last Name: </span>{lastName.trim()}</span>,
+        <span key={`in1-${Date.now()}`} className="block mb-1"><span style={{color: '#9d4edd'}}>Enter First Name: </span>{cleanFirst}</span>,
+        <span key={`in3-${Date.now()}`} className="block mb-4"><span style={{color: '#9d4edd'}}>Enter Last Name: </span>{cleanLast || <span className="text-slate-500 italic">[Skipped]</span>}</span>,
         <span key={`ok1-${Date.now()}`} className="text-emerald-500 block mb-1">[ ] Identity syntax verified.</span>,
         <span key={`ok2-${Date.now()}`} className="text-slate-400 block mb-1">[*] Generating authorization link...</span>
       ]);
@@ -225,8 +237,10 @@ const TerminalEngine = ({ startFlow }) => {
   };
 
   const getCharCountText = () => {
-    let currentTotal = firstName.trim().length;
-    if (termState === 2) currentTotal += 1 + lastName.trim().length;
+    const cleanFirst = firstName.trim().replace(/\s+/g, ' ');
+    const cleanLast = lastName.trim().replace(/\s+/g, ' ');
+    let currentTotal = cleanFirst.length;
+    if (termState === 2 && cleanLast) currentTotal += 1 + cleanLast.length;
     return `[Chars: ${currentTotal}/20]`;
   };
 
@@ -276,7 +290,8 @@ const TerminalEngine = ({ startFlow }) => {
               <input
                 type="text"
                 ref={lastNameRef}
-                className="bg-transparent border-none outline-none text-white font-['Cascadia_Code',monospace] text-[12px] md:text-[13px] flex-grow ml-2 caret-[#4a7bfe]"
+                placeholder="(optional - press Enter to skip)"
+                className="bg-transparent border-none outline-none text-white placeholder:text-slate-600 font-['Cascadia_Code',monospace] text-[12px] md:text-[13px] flex-grow ml-2 caret-[#4a7bfe]"
                 value={lastName}
                 onChange={(e) => {
                   if (/^[a-zA-Z\s\-]*$/.test(e.target.value)) {
