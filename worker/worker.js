@@ -107,11 +107,6 @@ export default {
       const safeFullName = stateName || verifiedUsername;
 
       // Edge Validation: Check 24-hour rate limit before dispatching action.
-      // This mirrors the cooldown the generate-certificate workflow applies, which
-      // reads both the issued certificate and the last failed attempt. Checking only
-      // the certificate here let a rate-limited attempt through: the dispatch fired,
-      // the workflow aborted immediately, and the frontend was left polling a record
-      // that never changed, which is the silent failure reported in #25.
       const COOLDOWN_SECONDS = 86400; 
       const nowSeconds = Math.floor(Date.now() / 1000);
 
