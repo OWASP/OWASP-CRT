@@ -10,7 +10,7 @@ export default {
 
     const sanitizeFullName = (name) => {
       if (!name) return null;
-      const sanitized = name.replace(/[^a-zA-Z\s\-]/g, '').substring(0, 50).trim();
+      const sanitized = name.replace(/[^a-zA-Z\s\-]/g, '').replace(/\s+/g, ' ').substring(0, 20).trim();
       return sanitized || null;
     };
 
