@@ -1,0 +1,20 @@
+{
+  "id": "35662945",
+  "user": "k3rt4s",
+  "real_name": "Jonathan Bowker",
+  "tier": "Silver",
+  "score": "0.001335",
+  "last_issued": 1788188285,
+  "stats": {
+    "first_commit_date": "2026-08-27",
+    "merged_commits": "6",
+    "project_count": "3",
+    "lines_added": "67",
+    "lines_removed": "33",
+    "repositories": [
+      "OWASP/CheatSheetSeries",
+      "OWASP/wstg",
+      "OWASP/OWASP-CRT"
+    ]
+  }
+}
