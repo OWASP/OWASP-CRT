@@ -3,13 +3,18 @@
   "user": "Bornunique911",
   "real_name": "Raviraj Mehta",
   "tier": "Gold",
-  "score": "0.009971",
-  "last_issued": 1786427745,
+  "score": "0.015489",
+  "last_issued": 1788802031,
   "stats": {
     "first_commit_date": "2024-04-15",
-    "merged_commits": "26",
+    "merged_commits": "47",
     "project_count": "3",
-    "lines_added": "2432",
-    "lines_removed": "307"
+    "lines_added": "2918",
+    "lines_removed": "557",
+    "repositories": [
+      "OWASP/FIASSE",
+      "OWASP/CheatSheetSeries",
+      "OWASP/OpenCRE"
+    ]
   }
 }
