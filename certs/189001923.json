@@ -1,0 +1,18 @@
+{
+  "id": "189001923",
+  "user": "AyeshaaRafaqat",
+  "real_name": "Ayesha Rafaqat",
+  "tier": "Silver",
+  "score": "0.000900",
+  "last_issued": 1789048188,
+  "stats": {
+    "first_commit_date": "2026-08-18",
+    "merged_commits": "2",
+    "project_count": "1",
+    "lines_added": "196",
+    "lines_removed": "62",
+    "repositories": [
+      "OWASP/OpenCRE"
+    ]
+  }
+}
