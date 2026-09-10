@@ -57,16 +57,40 @@ const TerminalEngine = ({ startFlow }) => {
   }, [startFlow]);
 
   const pollForCertificate = async (username, userId) => {
+  if (!/^\d+$/.test(String(userId))) {
     setHistory(p => [
       ...p,
-      <span key={`poll1-${Date.now()}`} className="block mb-1">
-        <span className="text-[#ff2a5f] font-bold">root</span><span className="text-white">@</span><span className="text-[#4a7bfe] font-bold">owasp-crt</span>:~$ ./crt_provision.sh --resume
-      </span>,
-      <span key={`poll2-${Date.now()}`} className="text-emerald-500 block mb-1">[ ] GitHub OAuth Authentication Successful.</span>,
-      <span key={`poll3-${Date.now()}`} className="text-slate-400 block mb-1">[*] Resolving GitHub Identity for @{username}...</span>,
-      <span key={`poll4-${Date.now()}`} className="text-slate-400 block mb-1">[*] Identity resolved (ID securely hashed in background).</span>,
-      <span key={`poll5-${Date.now()}`} className="text-slate-400 block mb-1">[*] Awaiting GitHub Actions background compilation... (This may take up to 3 minutes for extensive commit histories)</span>
+      <span
+        key={`invalid-id-${Date.now()}`}
+        className="text-red-400 block mb-1"
+      >
+        Invalid certificate identity.
+      </span>
     ]);
+    return;
+  }
+
+  setHistory(p => [
+    ...p,
+    <span key={`poll1-${Date.now()}`} className="block mb-1">
+      <span className="text-[#ff2a5f] font-bold">root</span>
+      <span className="text-white">@</span>
+      <span className="text-[#4a7bfe] font-bold">owasp-crt</span>
+      :~$ ./crt_provision.sh --resume
+    </span>,
+    <span key={`poll2-${Date.now()}`} className="text-emerald-500 block mb-1">
+      [ ] GitHub OAuth Authentication Successful.
+    </span>,
+    <span key={`poll3-${Date.now()}`} className="text-slate-400 block mb-1">
+      [*] Resolving GitHub Identity for @{username}...
+    </span>,
+    <span key={`poll4-${Date.now()}`} className="text-slate-400 block mb-1">
+      [*] Identity resolved (ID securely hashed in background).
+    </span>,
+    <span key={`poll5-${Date.now()}`} className="text-slate-400 block mb-1">
+      [*] Awaiting GitHub Actions background compilation...
+    </span>
+  ]);
     
     const apiCertUrl = `https://api.github.com/repos/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/contents/certs/${userId}.json?ref=${APP_CONFIG.github.branch}`;
     const apiAttemptUrl = `https://api.github.com/repos/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/contents/attempts/${userId}.json?ref=${APP_CONFIG.github.branch}`;
