@@ -181,7 +181,16 @@ export default {
             user_token: userAccessToken
           }
         })
-      });
+        }
+);
+
+if (!dispatchResponse.ok) {
+  console.error(`GitHub dispatch failed with HTTP ${dispatchResponse.status}`);
+  return new Response("Certificate generation could not be started.", {
+    status: 502,
+    headers: { "Content-Type": "text/plain; charset=UTF-8" }
+  });
+}
 
       if (!dispatchResponse.ok) {
         console.error(`GitHub dispatch failed with HTTP ${dispatchResponse.status}`);
