@@ -22,10 +22,10 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
   useEffect(() => {
     const fetchData = async () => {
       // Clear data immediately on ID change to prevent ghosting
-      if (!certId) {
+      if (!/^\d+$/.test(String(certId))) {
         setIsLoading(false);
-        setError("NO_ID_PROVIDED");
-        setFetchedId(null);
+        setError("INVALID_ID");
+        setFetchedId(certId);
         setCertUser(null);
         setPreviewImage(null);
         return;
