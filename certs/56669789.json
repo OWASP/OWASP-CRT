@@ -1,0 +1,18 @@
+{
+  "id": "56669789",
+  "user": "shubham-s-pandey",
+  "real_name": "Shubham Pandey",
+  "tier": "Bronze",
+  "score": "0.000403",
+  "last_issued": 1789139531,
+  "stats": {
+    "first_commit_date": "2026-09-11",
+    "merged_commits": "2",
+    "project_count": "1",
+    "lines_added": "16",
+    "lines_removed": "1",
+    "repositories": [
+      "OWASP/OWASP-CRT"
+    ]
+  }
+}
