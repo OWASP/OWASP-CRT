@@ -164,7 +164,7 @@ export default {
       }
 
       // Dispatch GitHub Action via Repository Dispatch (Sending User Token Securely)
-      await fetch(`https://api.github.com/repos/${env.REPO_OWNER}/${env.REPO_NAME}/dispatches`, {
+      const dispatchResponse = await fetch(`https://api.github.com/repos/${env.REPO_OWNER}/${env.REPO_NAME}/dispatches`, {
         method: "POST",
         headers: {
           "Accept": "application/vnd.github.v3+json",
@@ -182,6 +182,14 @@ export default {
           }
         })
       });
+
+      if (!dispatchResponse.ok) {
+        console.error(`GitHub dispatch failed with HTTP ${dispatchResponse.status}`);
+        return new Response("Certificate generation could not be started.", {
+          status: 502,
+          headers: { "Content-Type": "text/plain; charset=UTF-8" }
+        });
+      }
 
       const safeUserJSON = jsonForScript(verifiedUsername);
       const safeUserIdJSON = jsonForScript(verifiedUserId);
