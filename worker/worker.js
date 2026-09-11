@@ -164,27 +164,24 @@ export default {
       }
 
       // Dispatch GitHub Action via Repository Dispatch (Sending User Token Securely)
-      const dispatchResponse = await fetch(
-      `https://api.github.com/repos/${env.REPO_OWNER}/${env.REPO_NAME}/dispatches`,
-      {
-            method: "POST",
-            headers: {
-              "Accept": "application/vnd.github.v3+json",
-              "Authorization": `Bearer ${env.ADMIN_GITHUB_PAT}`,
-              "Content-Type": "application/json",
-              "User-Agent": "OWASP-CRT-App"
-            },
-            body: JSON.stringify({
-              event_type: "generate_cert_event",
-              client_payload: {
-                full_name: safeFullName,
-                github_user: verifiedUsername,
-                github_id: verifiedUserId,
-                user_token: userAccessToken
-              }
-            })
-            }
-      );
+      const dispatchResponse = await fetch(`https://api.github.com/repos/${env.REPO_OWNER}/${env.REPO_NAME}/dispatches`, {
+        method: "POST",
+        headers: {
+          "Accept": "application/vnd.github.v3+json",
+          "Authorization": `Bearer ${env.ADMIN_GITHUB_PAT}`,
+          "Content-Type": "application/json",
+          "User-Agent": "OWASP-CRT-App"
+        },
+        body: JSON.stringify({
+          event_type: "generate_cert_event",
+          client_payload: {
+            full_name: safeFullName,
+            github_user: verifiedUsername,
+            github_id: verifiedUserId,
+            user_token: userAccessToken
+          }
+        })
+      });
 
       if (!dispatchResponse.ok) {
         console.error(`GitHub dispatch failed with HTTP ${dispatchResponse.status}`);
