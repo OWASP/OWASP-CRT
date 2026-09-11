@@ -21,10 +21,10 @@ jobs:
           echo "::add-mask::${{ github.event.client_payload.user_token }}"
 
       - name: Checkout Main Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Checkout Data Branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: data 
           path: db_branch
