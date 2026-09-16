@@ -51,6 +51,9 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
               const apiJson = await apiResponse.json();
               const decodedContent = decodeURIComponent(escape(atob(apiJson.content)));
               data = JSON.parse(decodedContent);
+              if (!data || String(data.id) !== String(certId)) {
+                  throw new Error("IDENTITY_MISMATCH");
+                }
 
               // Remove 'fresh' parameter from URL without triggering a page reload
               // Prevents API rate-limiting if the user copies and shares the link
@@ -71,6 +74,10 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
             throw new Error("SERVER_ERROR");
           }
           data = await rawResponse.json();
+
+          if (!data || String(data.id) !== String(certId)) {
+            throw new Error("IDENTITY_MISMATCH");
+            }
         }
 
         setCertUser(data);
