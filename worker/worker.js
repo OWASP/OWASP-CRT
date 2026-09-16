@@ -216,7 +216,7 @@ export default {
                 window.opener.postMessage(payload, targetOrigin);
                 setTimeout(() => { window.close(); }, 300);
               } else {
-                window.location.href = targetOrigin + '/?status=success&user=' + encodeURIComponent(${safeUserJSON}) + '&userid=' + encodeURIComponent(${safeUserIdJSON}) + '&csrf=' + encodeURIComponent(${safeCsrfJSON});
+              window.location.href = targetOrigin + '/?status=success&user=' + encodeURIComponent(${safeUserJSON}) + '&userid=' + encodeURIComponent(${safeUserIdJSON});
               }
             </script>
           </body>
