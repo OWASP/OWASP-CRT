@@ -1,3 +1,4 @@
+import { validateCertificateRecord } from "../../utils/validateCertificateRecord";
 import React, { useEffect, useRef, useState } from 'react';
 import qrcode from 'qrcode-generator';
 import { APP_CONFIG } from '../../config';
@@ -51,6 +52,15 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
               const apiJson = await apiResponse.json();
               const decodedContent = decodeURIComponent(escape(atob(apiJson.content)));
               data = JSON.parse(decodedContent);
+
+              const validation = validateCertificateRecord(data, certId);
+
+                if (!validation.valid) {
+                  throw new Error("INVALID_CERTIFICATE_RECORD");
+                }
+                
+                data = validation.record;
+              
               if (!data || String(data.id) !== String(certId)) {
                   throw new Error("IDENTITY_MISMATCH");
               }
@@ -74,6 +84,14 @@ const CertificateViewer = ({ certId, isMaximized, setTelemetryData }) => {
             throw new Error("SERVER_ERROR");
           }
           data = await rawResponse.json();
+
+          const validation = validateCertificateRecord(data, certId);
+
+          if (!validation.valid) {
+            throw new Error("INVALID_CERTIFICATE_RECORD");
+          }
+          
+          data = validation.record;
 
           if (!data || String(data.id) !== String(certId)) {
             throw new Error("IDENTITY_MISMATCH");
