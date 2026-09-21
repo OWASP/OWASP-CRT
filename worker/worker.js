@@ -231,6 +231,20 @@ export default {
 
     } catch (error) {
       const safeErrorMessage = escapeHTML(error.message || "Unknown error");
+
+      const errorCode = error.message.includes("No verified commits")
+        ? "NO_VERIFIED_COMMITS"
+        : error.message.includes("Rate Limit Exceeded")
+          ? "RATE_LIMIT"
+          : "AUTH_ERROR";
+      
+      const hoursMatch = error.message.match(/(\d+)\s+hours?/);
+      const retryHours = hoursMatch ? Number(hoursMatch[1]) : null;
+      
+      const errorCodeJSON = jsonForScript(errorCode);
+      const retryHoursJSON =
+        retryHours === null ? "null" : String(retryHours);
+      
       const targetOriginJSON = jsonForScript(ALLOWED_ORIGIN);
 
       const html = `
@@ -242,14 +256,32 @@ export default {
             </div>
             <script>
               const targetOrigin = ${targetOriginJSON};
+              const errorCode = ${errorCodeJSON};
+              const retryHours = ${retryHoursJSON};
               const errMsg = ${jsonForScript(safeErrorMessage)};
               
               if (window.opener) {
-                window.opener.postMessage({ status: 'error', message: errMsg }, targetOrigin);
+                window.opener.postMessage(
+                  {
+                    status: "error",
+                    errorCode,
+                    retryHours
+                  },
+                  targetOrigin
+                );                
                 setTimeout(() => { window.close(); }, 1500);
               } else {
-                window.location.href = targetOrigin + '/?status=error&message=' + encodeURIComponent(errMsg);
-              }
+                    const params = new URLSearchParams({
+                      status: "error",
+                      error: errorCode
+                    });
+                    
+                    if (Number.isInteger(retryHours)) {
+                      params.set("hours", String(retryHours));
+                    }
+                    
+                    window.location.href = `${targetOrigin}/?${params.toString()}`;              
+        }
             </script>
           </body>
         </html>
