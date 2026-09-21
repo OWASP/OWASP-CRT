@@ -18,8 +18,33 @@ const TerminalEngine = ({ startFlow }) => {
     const status = params.get('status');
     const user = params.get('user');
     const userId = params.get('userid');
-    const errorMsgParam = params.get('message');
+    const errorCode = params.get("error");
+    const parsedHours = Number(params.get("hours"));
 
+    if (status === "error") {
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname
+      );
+    }
+    
+    const retryHours =
+      Number.isInteger(parsedHours) && parsedHours >= 0 && parsedHours <= 24
+        ? parsedHours
+        : null;
+    
+    const errorMessages = {
+      RATE_LIMIT:
+        retryHours === null
+          ? "Rate Limit Exceeded. Please try again later."
+          : `Rate Limit Exceeded: You must wait ${retryHours} hours before requesting a new certificate.`,
+      NO_VERIFIED_COMMITS:
+        retryHours === null
+          ? "No verified commits were found. Please try again later."
+          : `No verified commits were found for your account. You can try again in ${retryHours} hours.`,
+      AUTH_ERROR: "Authentication failed or malformed identity detected."
+    };
     if (status) {
       hasStarted.current = true;
       const isValidUser = user && /^[a-zA-Z0-9-]{1,39}$/.test(user);
@@ -29,7 +54,7 @@ const TerminalEngine = ({ startFlow }) => {
         pollForCertificate(user, userId);
       } else {
         setHistory([
-          <span key="err1" className="text-red-500 block mb-1">[!] ERROR: {errorMsgParam || "Authentication failed or malformed identity detected."}</span>,
+          <span key="err1" className="text-red-500 block mb-1">[!] ERROR: {errorMessages[errorCode] || errorMessages.AUTH_ERROR}</span>,
           <span key="err2" className="text-slate-400 block mb-4">Please execute CRT_Gen.sh to restart the process.</span>
         ]);
       }
