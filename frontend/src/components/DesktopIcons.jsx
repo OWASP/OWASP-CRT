@@ -90,6 +90,31 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
     }
   };
 
+  const openTrustedExternalUrl = (url) => {
+  try {
+    const target = new URL(url);
+
+    if (
+      target.protocol !== "https:" ||
+      target.hostname !== "www.linkedin.com"
+    ) {
+      return;
+    }
+
+    const popup = window.open(
+      target.href,
+      "_blank",
+      "noopener,noreferrer"
+    );
+
+    if (popup) {
+      popup.opener = null;
+    }
+  } catch (error) {
+    console.error("Blocked invalid external URL", error);
+  }
+};
+  
   const handleAddToLinkedIn = () => {
     if (!certId) {
       alert("No certificate is loaded yet. Run CRT_Gen.sh to generate your certificate before adding it to LinkedIn.");
@@ -120,7 +145,7 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
     const certUrl = `https://crt.owasp.org/?id=${certId}`;
     const linkedInUrl = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(certName)}&organizationName=${encodeURIComponent(organizationName)}&issueYear=${issueYear}&issueMonth=${issueMonth}&certUrl=${encodeURIComponent(certUrl)}&certId=${encodeURIComponent(certId)}`;
     
-    window.open(linkedInUrl, '_blank');
+    openTrustedExternalUrl(linkedInUrl);  
   };
 
   const handleIconClick = (action) => {
