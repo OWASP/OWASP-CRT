@@ -58,16 +58,55 @@ jobs:
           cert_path = f"db_branch/certs/{user_id}.json"
           attempt_path = f"db_branch/attempts/{user_id}.json"
 
+          def safe_public_error(msg):
+              text = str(msg)
+          
+              if "Rate Limit Exceeded" in text:
+                  return (
+                      "RATE_LIMITED",
+                      "Certificate generation is temporarily unavailable. Please try again later."
+                  )
+          
+              if "No verified commits" in text:
+                  return (
+                      "NO_VERIFIED_COMMITS",
+                      "No verified commits were found for this account."
+                  )
+          
+              if "User Not Found" in text:
+                  return (
+                      "USER_NOT_FOUND",
+                      "The GitHub account could not be verified."
+                  )
+          
+              if "Input Error" in text:
+                  return (
+                      "INPUT_ERROR",
+                      "The submitted information was invalid."
+                  )
+          
+              return (
+                  "GENERATION_FAILED",
+                  "Certificate generation could not be completed. Please try again later."
+              )
+          
+          
           def abort_with_error(msg, apply_limit=False):
-              print(f"::error::{msg}")
+              error_code, safe_message = safe_public_error(msg)
+          
+              print(f"::error::{error_code}")
+          
               os.makedirs("db_branch/attempts", exist_ok=True)
+          
               with open(attempt_path, "w", encoding="utf-8") as f:
                   json.dump({
-                      "last_attempt": int(now), 
-                      "status": "error", 
-                      "message": str(msg),
+                      "last_attempt": int(now),
+                      "status": "error",
+                      "error_code": error_code,
+                      "message": safe_message,
                       "apply_limit": apply_limit
                   }, f)
+          
               sys.exit(1)
               
           try:
