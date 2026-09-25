@@ -1,1 +1,1 @@
-{"last_attempt": 1785991314, "status": "error", "message": "No verified commits found in OWASP repositories.", "apply_limit": true}
+{"last_attempt": 1790358327, "status": "error", "message": "No verified commits found in the OWASP or GenAI Security Project repositories.", "apply_limit": true}
