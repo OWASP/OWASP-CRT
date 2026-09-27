@@ -91,29 +91,29 @@ const DesktopIcons = ({ toggleWindow, tutorialStep, advanceTutorial, telemetryDa
   };
 
   const openTrustedExternalUrl = (url) => {
-  try {
-    const target = new URL(url);
-
-    if (
-      target.protocol !== "https:" ||
-      target.hostname !== "www.linkedin.com"
-    ) {
-      return;
+    try {
+      const target = new URL(url);
+  
+      if (
+        target.protocol !== "https:" ||
+        target.hostname !== "www.linkedin.com"
+      ) {
+        return;
+      }
+  
+      const popup = window.open(
+        target.href,
+        "_blank",
+        "noopener,noreferrer"
+      );
+  
+      if (popup) {
+        popup.opener = null;
+      }
+    } catch (error) {
+      console.error("Blocked invalid external URL", error);
     }
-
-    const popup = window.open(
-      target.href,
-      "_blank",
-      "noopener,noreferrer"
-    );
-
-    if (popup) {
-      popup.opener = null;
-    }
-  } catch (error) {
-    console.error("Blocked invalid external URL", error);
-  }
-};
+  };
   
   const handleAddToLinkedIn = () => {
     if (!certId) {
