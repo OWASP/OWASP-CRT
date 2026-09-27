@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { APP_CONFIG } from '../../config';
-
+const SAFE_ATTEMPT_MESSAGES = Object.freeze({
+  RATE_LIMITED:
+    "Certificate generation is temporarily unavailable. Please try again later.",
+  NO_VERIFIED_COMMITS:
+    "No verified commits were found for this account.",
+  USER_NOT_FOUND:
+    "The GitHub account could not be verified.",
+  INPUT_ERROR:
+    "The submitted information was invalid.",
+  GENERATION_FAILED:
+    "Certificate generation could not be completed. Please try again later.",
+});
 const TerminalEngine = ({ startFlow }) => {
   const [history, setHistory] = useState([]);
   const [termState, setTermState] = useState(0);
@@ -148,9 +159,12 @@ const TerminalEngine = ({ startFlow }) => {
               const nowSeconds = Math.floor(Date.now() / 1000);
               if (attemptData.status === 'error' && attemptData.last_attempt && (nowSeconds - attemptData.last_attempt < 300)) {
                 clearInterval(checkCert);
+                const safeMessage =
+                  SAFE_ATTEMPT_MESSAGES[attemptData.error_code] ||
+                  SAFE_ATTEMPT_MESSAGES.GENERATION_FAILED;
                 setHistory(p => [
                   ...p,
-                  <span key={`gh-err-${Date.now()}`} className="text-red-500 block mt-2 mb-1">[!] SYSTEM ERROR: {attemptData.message}</span>,
+                  <span key={`gh-err-${Date.now()}`} className="text-red-500 block mt-2 mb-1">[!] SYSTEM ERROR: {safeMessage}</span>,
                   <span key={`gh-err2-${Date.now()}`} className="text-slate-400 block mb-4">Process aborted. Fix the issue and try again.</span>
                 ]);
                 return;
