@@ -3,14 +3,14 @@
   "user": "shubham-s-pandey",
   "real_name": "Shubham Pandey",
   "tier": "Silver",
-  "score": "0.000909",
-  "last_issued": 1790092841,
+  "score": "0.001148",
+  "last_issued": 1790495720,
   "stats": {
     "first_commit_date": "2026-09-11",
-    "merged_commits": "4",
+    "merged_commits": "5",
     "project_count": "1",
-    "lines_added": "72",
-    "lines_removed": "13",
+    "lines_added": "99",
+    "lines_removed": "15",
     "repositories": [
       "OWASP/OWASP-CRT"
     ]
