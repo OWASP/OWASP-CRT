@@ -1,21 +1,34 @@
 name: CI
 
-on: [pull_request]
+on:
+  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   check:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Lint Worker
-        run: npx --yes eslint@10 worker/worker.js
+      - name: Lint Cloudflare Worker
+        run: |
+          npx --yes eslint@10 worker/worker.js \
+            --global URL \
+            --global crypto \
+            --global btoa \
+            --global atob \
+            --global Response \
+            --global fetch \
+            --global console
 
       - name: Validate Worker
         run: npx --yes wrangler@4 deploy --dry-run --outdir=dist
-        
