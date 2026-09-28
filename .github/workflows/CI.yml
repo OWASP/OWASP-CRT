@@ -5,6 +5,7 @@ on: [pull_request]
 jobs:
   check:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -12,7 +13,9 @@ jobs:
         with:
           node-version: 20
 
-      - run: npm install
-      - run: npx eslint worker/worker.js
-      - run: npx wrangler deploy --dry-run --outdir=dist
-      
+      - name: Lint Worker
+        run: npx --yes eslint@10 worker/worker.js
+
+      - name: Validate Worker
+        run: npx --yes wrangler@4 deploy --dry-run --outdir=dist
+        
