@@ -8,12 +8,6 @@ export default {
 
     const jsonForScript = (val) => JSON.stringify(val).replace(/</g, '\\u003c');
 
-    const sanitizeFullName = (name) => {
-      if (!name) return null;
-      const sanitized = name.replace(/[^a-zA-Z\s\-]/g, '').replace(/\s+/g, ' ').substring(0, 20).trim();
-      return sanitized || null;
-    };
-
     const ALLOWED_ORIGIN = "https://crt.owasp.org";
     const CALLBACK_URL = `${url.origin}/`;
     const COOKIE_NAME = "__Host-owasp_oauth_csrf";
@@ -27,15 +21,8 @@ export default {
     const clearCsrfCookieHeader = `${COOKIE_NAME}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`;
 
     if (url.pathname === "/start") {
-      const rawName = url.searchParams.get("name") || "";
-      const safeName = sanitizeFullName(rawName);
-
-      if (rawName && !safeName) {
-        return new Response("Invalid name parameter", { status: 400 });
-      }
-
       const csrfToken = crypto.randomUUID();
-      const statePayload = { csrf: csrfToken, name: safeName };
+      const statePayload = { csrf: csrfToken };
       const encodedState = btoa(unescape(encodeURIComponent(JSON.stringify(statePayload))));
 
       const authorizeUrl = new URL("https://github.com/login/oauth/authorize");
@@ -60,13 +47,11 @@ export default {
       return new Response("Missing code", { status: 400 });
     }
 
-    let stateName = null;
     let stateCsrf = null;
     try {
       if (!rawState) throw new Error("missing state");
       const decodedJson = JSON.parse(decodeURIComponent(escape(atob(rawState))));
       stateCsrf = decodedJson.csrf || null;
-      stateName = sanitizeFullName(decodedJson.name);
     } catch (e) {
       return new Response("Invalid or malformed state parameter (CSRF Alert)", { status: 403 });
     }
@@ -104,7 +89,21 @@ export default {
       const userData = await userResponse.json();
       const verifiedUsername = userData.login;
       const verifiedUserId = userData.id.toString();
-      const safeFullName = stateName || verifiedUsername;
+      const sanitizeProfileName = (name) => {
+      if (!name) return null;
+    
+      const sanitized = String(name)
+        .replace(/[^a-zA-Z\s\-]/g, "")
+        .replace(/\s+/g, " ")
+        .substring(0, 40)
+        .trim();
+    
+      return sanitized || null;
+    };
+    
+    const safeFullName =
+      sanitizeProfileName(userData.name) || verifiedUsername;
+      const safeFullName = sanitizeFullName(userData.name || verifiedUsername) || verifiedUsername;
 
       // Edge Validation: Check 24-hour rate limit before dispatching action.
       const COOLDOWN_SECONDS = 86400; 
