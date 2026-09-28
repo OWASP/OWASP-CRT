@@ -92,21 +92,23 @@ export default {
       const sanitizeProfileName = (name) => {
       if (!name) return null;
     
-      const sanitized = String(name)
-        .replace(/[^a-zA-Z\s\-]/g, "")
-        .replace(/\s+/g, " ")
-        .substring(0, 40)
-        .trim();
-    
-      return sanitized || null;
-    };
-    
-    const safeFullName =
-      sanitizeProfileName(userData.name) || verifiedUsername;
-      const safeFullName = sanitizeFullName(userData.name || verifiedUsername) || verifiedUsername;
-
+      const sanitizeProfileName = (name) => {
+        if (!name) return null;
+      
+        const sanitized = String(name)
+          .replace(/[^a-zA-Z\s-]/g, "")
+          .replace(/\s+/g, " ")
+          .substring(0, 40)
+          .trim();
+      
+        return sanitized || null;
+      };
+      
+      const safeFullName =
+        sanitizeProfileName(userData.name) || verifiedUsername;
+      
       // Edge Validation: Check 24-hour rate limit before dispatching action.
-      const COOLDOWN_SECONDS = 86400; 
+      const COOLDOWN_SECONDS = 86400;
       const nowSeconds = Math.floor(Date.now() / 1000);
 
       const readDataRecord = async (path) => {
