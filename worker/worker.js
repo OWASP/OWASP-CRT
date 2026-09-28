@@ -89,8 +89,6 @@ export default {
       const userData = await userResponse.json();
       const verifiedUsername = userData.login;
       const verifiedUserId = userData.id.toString();
-      const sanitizeProfileName = (name) => {
-      if (!name) return null;
     
       const sanitizeProfileName = (name) => {
         if (!name) return null;
