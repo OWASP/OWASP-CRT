@@ -44,9 +44,24 @@ const LiquidGlobalBackground = () => {
     <div className="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0 bg-[#08080C]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(79,70,229,0.06)_0%,_transparent_70%)] z-0"></div>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_40%,_#08080C_100%)] z-20 opacity-90"></div>
-      <div ref={blob1} className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-indigo-500 rounded-full blur-[130px] mix-blend-screen z-10 transition-opacity duration-300"></div>
-      <div ref={blob2} className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-fuchsia-500 rounded-full blur-[130px] mix-blend-screen z-10 transition-opacity duration-300"></div>
-      <div ref={blob3} className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-blue-500 rounded-full blur-[130px] mix-blend-screen z-10 transition-opacity duration-300"></div>
+      
+      <div 
+        ref={blob1} 
+        style={{ opacity: 0.11, transform: 'translate(calc(-50% - 18vw), calc(-50% - 18vw)) scale(1)' }} 
+        className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-indigo-500 rounded-full blur-[130px] mix-blend-screen z-10"
+      ></div>
+      
+      <div 
+        ref={blob2} 
+        style={{ opacity: 0.11, transform: 'translate(calc(-50% + 18vw), calc(-50% - 18vw)) scale(1)' }} 
+        className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-fuchsia-500 rounded-full blur-[130px] mix-blend-screen z-10"
+      ></div>
+      
+      <div 
+        ref={blob3} 
+        style={{ opacity: 0.11, transform: 'translate(-50%, calc(-50% + 18vw)) scale(1)' }} 
+        className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-blue-500 rounded-full blur-[130px] mix-blend-screen z-10"
+      ></div>
     </div>
   );
 };
@@ -70,14 +85,14 @@ const App = () => {
   }, []);
 
   return (
-    <div className="min-h-[100dvh] w-full relative overflow-x-hidden bg-transparent text-white font-sans flex flex-col">
+    <div className="min-h-[100dvh] w-full relative bg-transparent text-white font-sans flex flex-col">
       
       <LiquidGlobalBackground />
 
       <div className="relative z-10 flex flex-col min-h-[100dvh]">
         <Navbar currentView={currentView} setCurrentView={setCurrentView} />
         
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12 flex flex-col">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12 flex flex-col overflow-hidden">
           {currentView === 'dashboard' && <Dashboard setCurrentView={setCurrentView} />}
           {currentView === 'wizard' && <Wizard setCurrentView={setCurrentView} />}
           {currentView === 'certificate' && <CertificateView certId={certId} setTelemetryData={setTelemetryData} />}
