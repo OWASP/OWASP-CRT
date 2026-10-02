@@ -18,14 +18,6 @@ Both halves of the pipeline are complete and deployed:
 
 Development continues, but the focus has shifted from building core features to proving the tool holds up under real usage: catching edge cases, confirming tier scoring is fair across different contribution patterns, and hardening the workflow against abuse. If you request a certificate and hit something odd, please open an issue — beta feedback is exactly what we need right now.
 
-### See it in Action
-
-Watch a quick demonstration of the seamless certificate request process:
-
-<div align="center">
-  <video src="https://github.com/user-attachments/assets/96c693f2-f3dd-42f8-8274-6850a1208686" width="100%" max-width="800px" controls="controls"></video>
-</div>
-
 ### About The Project
 
 The OWASP Foundation thrives on the dedication of its global community of volunteers. From code contributions and documentation to chapter leadership and event organization, these efforts are the backbone of our mission.
