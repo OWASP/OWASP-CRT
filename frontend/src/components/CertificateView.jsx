@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Download, Share2, Linkedin, AlertCircle, Loader2, GitCommit, FolderGit2, FilePlus, FileMinus, Award, CheckCircle2, X, Maximize } from 'lucide-react';
+import { Download, Share2, Linkedin, AlertCircle, Loader2, GitCommit, FolderGit2, FilePlus, FileMinus, Award, CheckCircle2, X, Maximize, Target, Github } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import qrcode from 'qrcode-generator';
 import { APP_CONFIG } from '../config';
@@ -446,6 +446,27 @@ const CertificateView = ({ certId, setTelemetryData }) => {
   if (currentTier === "SILVER") { tierColor = "text-blue-400"; tierBg = "bg-blue-500/10"; tierBorder = "border-blue-500/20"; }
   else if (currentTier === "GOLD") { tierColor = "text-pink-400"; tierBg = "bg-pink-500/10"; tierBorder = "border-pink-500/20"; }
 
+  const commits = parseInt(stats.merged_commits || '0', 10);
+  let progress = 0;
+  let progressText = '';
+  let nextTierColor = '';
+
+  if (currentTier === "BRONZE") {
+    const target = 10;
+    progress = Math.min((commits / target) * 100, 100);
+    progressText = commits >= target ? "Ready for Silver!" : `${target - commits} commits to Silver`;
+    nextTierColor = "text-blue-400";
+  } else if (currentTier === "SILVER") {
+    const target = 50;
+    progress = Math.min((commits / target) * 100, 100);
+    progressText = commits >= target ? "Ready for Gold!" : `${target - commits} commits to Gold`;
+    nextTierColor = "text-pink-400";
+  } else {
+    progress = 100;
+    progressText = "Highest Tier Achieved";
+    nextTierColor = "text-yellow-400"; 
+  }
+
   return (
     <div className="w-full max-w-7xl mx-auto my-auto animate-fade-in py-8 md:py-12 relative">
       
@@ -462,6 +483,7 @@ const CertificateView = ({ certId, setTelemetryData }) => {
 
       <div className="w-full flex flex-col-reverse lg:flex-row gap-12 lg:gap-16 items-center relative">
         
+        {/* LEFT COLUMN */}
         <div className="w-full lg:w-5/12 flex flex-col gap-6 lg:gap-8 relative z-10">
           <div>
             <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] sm:text-xs font-semibold mb-4 lg:mb-6 tracking-wide shadow-sm">
@@ -472,15 +494,49 @@ const CertificateView = ({ certId, setTelemetryData }) => {
           </div>
 
           {certUser && (
-            <div className="grid grid-cols-2 gap-3 lg:gap-4 animate-[slideUp_0.5s_ease-out_0.2s_forwards] opacity-0">
-              <StatCard title="Commits" value={stats.merged_commits || '0'} icon={GitCommit} color="text-purple-400" bg="bg-purple-500/10" border="border-purple-500/20" />
-              <StatCard title="Projects" value={stats.project_count || '0'} icon={FolderGit2} color="text-blue-400" bg="bg-blue-500/10" border="border-blue-500/20" />
-              <StatCard title="Lines Added" value={`+${stats.lines_added || '0'}`} icon={FilePlus} color="text-emerald-400" bg="bg-emerald-500/10" border="border-emerald-500/20" />
-              <StatCard title="Tier" value={currentTier} icon={Award} color={tierColor} bg={tierBg} border={tierBorder} />
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-3 lg:gap-4 animate-[slideUp_0.5s_ease-out_0.2s_forwards] opacity-0">
+                <StatCard title="Commits" value={stats.merged_commits || '0'} icon={GitCommit} color="text-purple-400" bg="bg-purple-500/10" border="border-purple-500/20" />
+                <StatCard title="Projects" value={stats.project_count || '0'} icon={FolderGit2} color="text-blue-400" bg="bg-blue-500/10" border="border-blue-500/20" />
+                <StatCard title="Lines Added" value={`+${stats.lines_added || '0'}`} icon={FilePlus} color="text-emerald-400" bg="bg-emerald-500/10" border="border-emerald-500/20" />
+                <StatCard title="Tier" value={currentTier} icon={Award} color={tierColor} bg={tierBg} border={tierBorder} />
+              </div>
+
+              {stats.repositories && stats.repositories.length > 0 && (
+                <div className="animate-[slideUp_0.5s_ease-out_0.3s_forwards] opacity-0 mt-2">
+                  <h3 className="text-zinc-500 text-[11px] font-bold tracking-widest uppercase mb-3 px-1">Contributed Projects</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {stats.repositories.map(repo => (
+                      <span key={repo} className="px-3 py-1.5 bg-white/[0.03] border border-white/[0.08] rounded-xl text-xs font-semibold text-white/80 shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex items-center gap-1.5 hover:bg-white/[0.06] transition-colors cursor-default">
+                        <Github className="w-3.5 h-3.5 text-zinc-400" /> {repo}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl p-5 animate-[slideUp_0.5s_ease-out_0.4s_forwards] opacity-0 mt-1">
+                <div className="flex justify-between items-end mb-3">
+                  <div>
+                    <span className="text-zinc-400 text-[11px] font-bold tracking-widest uppercase block mb-1 flex items-center gap-1.5">
+                      <Target className="w-3.5 h-3.5" /> Level Progress
+                    </span>
+                  </div>
+                  <span className={`text-xl font-bold drop-shadow-md`}>{Math.round(progress)}%</span>
+                </div>
+                <div className="w-full h-2.5 bg-black/50 rounded-full overflow-hidden border border-white/[0.05] shadow-inner">
+                  <div 
+                    className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500 rounded-full relative transition-all duration-1000 ease-out" 
+                    style={{ width: `${progress}%` }}
+                  >
+                    <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3 animate-[slideUp_0.5s_ease-out_0.3s_forwards] opacity-0 mt-2">
+          <div className="flex flex-col sm:flex-row gap-3 animate-[slideUp_0.5s_ease-out_0.5s_forwards] opacity-0 mt-4">
             <button onClick={handleGeneratePDF} className="flex-1 py-3.5 px-5 rounded-xl bg-white/90 text-black text-xs sm:text-sm font-bold hover:bg-white transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:-translate-y-0.5">
               <Download className="w-4 h-4 sm:w-5 sm:h-5" /> Export PDF
             </button>
@@ -490,6 +546,7 @@ const CertificateView = ({ certId, setTelemetryData }) => {
           </div>
         </div>
 
+        {/* RIGHT COLUMN */}
         <div className="w-full lg:w-7/12 flex items-center justify-center relative z-10 animate-[slideUp_0.5s_ease-out_0.1s_forwards] opacity-0">
           <canvas ref={canvasRef} id="cert-canvas" className="hidden" width="2480" height="3508" />
           
