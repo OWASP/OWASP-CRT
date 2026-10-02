@@ -198,10 +198,40 @@ export default {
 
       const html = `
         <!DOCTYPE html>
-        <html>
-          <body style="background:#050608; color:#fff; font-family:monospace; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;">
-            <div style="text-align:center;">
-              <p style="color:#10b981;">[✔] Authentication successful! Verifying secure session...</p>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Authentication Successful</title>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+            <style>
+              body { margin: 0; background-color: #05050A; color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+              .bg-blobs { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: radial-gradient(ellipse at center, transparent 40%, #05050A 100%); }
+              .blob { position: absolute; top: 50%; left: 50%; width: 45vw; height: 45vw; border-radius: 50%; mix-blend-mode: screen; filter: blur(100px); opacity: 0.15; animation: pulse 4s infinite alternate ease-in-out; }
+              .blob-1 { background: #6366f1; transform: translate(-80%, -80%); animation-delay: 0s; }
+              .blob-2 { background: #d946ef; transform: translate( -20%, -80%); animation-delay: -1s; }
+              .blob-3 { background: #3b82f6; transform: translate(-50%, -20%); animation-delay: -2s; }
+              @keyframes pulse { 0% { opacity: 0.1; } 100% { opacity: 0.2; transform: scale(1.05) translate(var(--tx, 0), var(--ty, 0)); } }
+              .glass-card { position: relative; z-index: 10; background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); width: 85%; max-width: 420px; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+              @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+              .icon-box { width: 64px; height: 64px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px auto; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #34d399; box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); }
+              .icon-box svg { width: 32px; height: 32px; stroke-width: 2.5; }
+              h2 { margin: 0 0 12px 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+              p { margin: 0; color: #a1a1aa; font-size: 15px; line-height: 1.6; }
+            </style>
+          </head>
+          <body>
+            <div class="bg-blobs">
+              <div class="blob blob-1"></div>
+              <div class="blob blob-2"></div>
+              <div class="blob blob-3"></div>
+            </div>
+            <div class="glass-card">
+              <div class="icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </div>
+              <h2>Authentication Successful</h2>
+              <p>Verifying secure session and returning you to the dashboard...</p>
             </div>
             <script>
               const targetOrigin = ${targetOriginJSON};
@@ -235,10 +265,40 @@ export default {
 
       const html = `
         <!DOCTYPE html>
-        <html>
-          <body style="background:#050608; color:#ef4444; font-family:monospace; display:flex; justify-content:center; align-items:center; height:100vh; margin:0;">
-            <div style="text-align:center;">
-              <p>[!] Authentication Error: ${safeErrorMessage}</p>
+        <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Authentication Error</title>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+            <style>
+              body { margin: 0; background-color: #05050A; color: #fff; font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+              .bg-blobs { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: radial-gradient(ellipse at center, transparent 40%, #05050A 100%); }
+              .blob { position: absolute; top: 50%; left: 50%; width: 45vw; height: 45vw; border-radius: 50%; mix-blend-mode: screen; filter: blur(100px); opacity: 0.15; animation: pulse 4s infinite alternate ease-in-out; }
+              .blob-1 { background: #6366f1; transform: translate(-80%, -80%); animation-delay: 0s; }
+              .blob-2 { background: #ef4444; transform: translate( -20%, -80%); animation-delay: -1s; } /* Red accent for error */
+              .blob-3 { background: #3b82f6; transform: translate(-50%, -20%); animation-delay: -2s; }
+              @keyframes pulse { 0% { opacity: 0.1; } 100% { opacity: 0.2; transform: scale(1.05); } }
+              .glass-card { position: relative; z-index: 10; background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; padding: 40px; text-align: center; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); width: 85%; max-width: 420px; animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+              @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+              .icon-box { width: 64px; height: 64px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px auto; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #f87171; box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
+              .icon-box svg { width: 32px; height: 32px; stroke-width: 2.5; }
+              h2 { margin: 0 0 12px 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+              p { margin: 0; color: #a1a1aa; font-size: 15px; line-height: 1.6; }
+            </style>
+          </head>
+          <body>
+            <div class="bg-blobs">
+              <div class="blob blob-1"></div>
+              <div class="blob blob-2"></div>
+              <div class="blob blob-3"></div>
+            </div>
+            <div class="glass-card">
+              <div class="icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              </div>
+              <h2>Access Denied</h2>
+              <p>${safeErrorMessage}</p>
             </div>
             <script>
               const targetOrigin = ${targetOriginJSON};
