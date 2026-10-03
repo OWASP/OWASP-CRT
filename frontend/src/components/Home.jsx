@@ -46,7 +46,7 @@ const LiquidBackground = () => {
   );
 };
 
-const Dashboard = ({ setCurrentView }) => {
+const Home = ({ setCurrentView }) => {
   const [selectedCert, setSelectedCert] = useState(null);
 
   return (
@@ -221,4 +221,4 @@ const GlassStepCard = ({ icon: Icon, title, description }) => (
   </div>
 );
 
-export default Dashboard;
+export default Home;
