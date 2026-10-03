@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Github, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 
-const Wizard = ({ setCurrentView }) => {
+const Verify = ({ setCurrentView }) => {
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -225,4 +225,4 @@ const Wizard = ({ setCurrentView }) => {
   );
 };
 
-export default Wizard;
+export default Verify;
