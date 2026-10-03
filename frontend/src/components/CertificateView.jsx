@@ -1,15 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Download, Linkedin, AlertCircle, Loader2, GitCommit, FolderGit2, FilePlus, Award, CheckCircle2, X, Maximize, Target, Github, ShieldAlert } from 'lucide-react';
+import { Download, Linkedin, AlertCircle, Loader2, GitCommit, FolderGit2, FilePlus, Award, CheckCircle2, X, Maximize, Target, Github, ShieldAlert, Copy, Share2 } from 'lucide-react';
 import { jsPDF } from "jspdf";
 
 import StatCard from './StatCard';
 import { useCertificateData } from '../hooks/useCertificateData';
 import { renderCertificateToCanvas } from '../utils/certificateRenderer';
+import { APP_CONFIG } from '../config';
 
 const CertificateView = ({ certId, setTelemetryData }) => {
   const canvasRef = useRef(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [isEnlarged, setIsEnlarged] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
 
   // 1. Data Fetching via Custom Hook
   const { certUser, error, isLoading } = useCertificateData(certId, setTelemetryData);
@@ -49,9 +51,20 @@ const CertificateView = ({ certId, setTelemetryData }) => {
       }
     }
     
-    const certUrl = `https://crt.owasp.org/?id=${certId}`;
+    const certUrl = `${APP_CONFIG.domain}/?id=${certId}`;
     const linkedInUrl = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(certName)}&organizationName=OWASP%20Foundation&issueYear=${issueYear}&issueMonth=${issueMonth}&certUrl=${encodeURIComponent(certUrl)}&certId=${encodeURIComponent(certId)}`;
     window.open(linkedInUrl, "_blank");
+  };
+
+  const handleCopyLink = async () => {
+    const certUrl = `${APP_CONFIG.domain}/?id=${certId}`;
+    try {
+      await navigator.clipboard.writeText(certUrl);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
   };
 
   if (error) {
@@ -84,7 +97,6 @@ const CertificateView = ({ certId, setTelemetryData }) => {
   return (
     <div className="w-full max-w-7xl mx-auto animate-fade-in pt-4 pb-8 md:pt-6 md:pb-12 relative">
       
-      {/* Hidden Div for Preloading Fonts */}
       <div style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', opacity: 0.01, pointerEvents: 'none', zIndex: -1 }}>
         <span style={{ fontFamily: 'Anton', fontWeight: 400 }}>Preload</span>
         <span style={{ fontFamily: 'Inter', fontWeight: 200 }}>Preload</span>
@@ -96,10 +108,9 @@ const CertificateView = ({ certId, setTelemetryData }) => {
         <span style={{ fontFamily: 'Cascadia Mono', fontWeight: 700 }}>Preload</span>
       </div>
 
-      <div className="w-full flex flex-col-reverse lg:flex-row gap-12 lg:gap-16 items-center relative">
+      <div className="w-full flex flex-col-reverse lg:flex-row gap-12 lg:gap-16 items-start relative">
         
-        {/* LEFT COLUMN */}
-        <div className="w-full lg:w-5/12 flex flex-col gap-6 lg:gap-8 relative z-10">
+        <div className="w-full lg:w-5/12 flex flex-col gap-4 lg:gap-5 relative z-10">
           <div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 sm:mb-3 lg:mb-4 tracking-tight leading-tight drop-shadow-md">Your Official<br className="hidden lg:block"/> Credential</h2>
             <p className="text-zinc-400 text-sm sm:text-base lg:text-lg leading-relaxed max-w-md">Officially recognized across the OWASP global ecosystem.</p>
@@ -148,23 +159,49 @@ const CertificateView = ({ certId, setTelemetryData }) => {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3 animate-[slideUp_0.5s_ease-out_0.5s_forwards] opacity-0 mt-4">
-            <button onClick={handleGeneratePDF} className="flex-1 py-3.5 px-5 rounded-xl bg-white/90 text-black text-xs sm:text-sm font-bold hover:bg-white transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:-translate-y-0.5">
-              <Download className="w-4 h-4 sm:w-5 sm:h-5" /> Export PDF
-            </button>
-            <button onClick={handleAddToLinkedIn} className="flex-1 py-3.5 px-5 rounded-xl bg-[#0077b5]/20 hover:bg-[#0077b5]/30 border border-[#0077b5]/40 text-[#00a0dc] text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 shadow-sm">
-              <Linkedin className="w-4 h-4 sm:w-5 sm:h-5" /> LinkedIn
-            </button>
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] shadow-[0_8px_32px_rgba(0,0,0,0.3)] rounded-2xl p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 animate-[slideUp_0.5s_ease-out_0.5s_forwards] opacity-0 mt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-zinc-400 text-[10px] sm:text-[11px] font-bold tracking-widest uppercase flex items-center gap-1.5">
+                <Share2 className="w-3.5 h-3.5" /> Share & Export
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between p-1 sm:p-1.5 rounded-xl bg-black/40 border border-white/[0.08] shadow-inner w-full">
+              <div className="flex-1 min-w-0 truncate px-2 sm:px-3 text-zinc-400 text-xs sm:text-sm font-mono select-all">
+                {APP_CONFIG.domain}/?id={certId}
+              </div>
+              <button 
+                onClick={handleCopyLink}
+                className={`shrink-0 py-1.5 px-3 sm:py-2 sm:px-4 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  isCopied 
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.2)]' 
+                    : 'bg-white/10 text-white hover:bg-white/20 border border-white/5 shadow-sm hover:shadow-md'
+                }`}
+              >
+                {isCopied ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span className="hidden sm:inline">{isCopied ? 'Copied!' : 'Copy'}</span>
+                <span className="sm:hidden">{isCopied ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+
+            <div className="flex gap-2.5 sm:gap-3">
+              <button onClick={handleGeneratePDF} className="flex-1 py-2.5 sm:py-3 px-4 rounded-xl bg-white/90 text-black text-xs sm:text-sm font-bold hover:bg-white transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:-translate-y-0.5">
+                <Download className="w-4 h-4" /> <span className="hidden sm:inline">Export PDF</span><span className="sm:hidden">PDF</span>
+              </button>
+              <button onClick={handleAddToLinkedIn} className="flex-1 py-2.5 sm:py-3 px-4 rounded-xl bg-[#0077b5]/20 hover:bg-[#0077b5]/30 border border-[#0077b5]/40 text-[#00a0dc] text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 shadow-sm">
+                <Linkedin className="w-4 h-4" /> LinkedIn
+              </button>
+            </div>
           </div>
+          
         </div>
 
-        {/* RIGHT COLUMN */}
-        <div className="w-full lg:w-7/12 flex items-center justify-center relative z-10 animate-[slideUp_0.5s_ease-out_0.1s_forwards] opacity-0">
+        <div className="w-full lg:w-7/12 flex items-start justify-center relative z-10 animate-[slideUp_0.5s_ease-out_0.1s_forwards] opacity-0 lg:pt-2">
           <canvas ref={canvasRef} id="cert-canvas" className="hidden" width="2480" height="3508" />
           
           {previewImage ? (
             <div 
-              className="relative mx-auto rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8)] border border-white/10 group transition-transform duration-500 hover:scale-[1.02] cursor-pointer w-full max-w-[340px] sm:max-w-[400px] lg:max-w-none lg:w-auto lg:h-[72vh] aspect-[1/1.414]"
+              className="relative mx-auto rounded-xl sm:rounded-2xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8)] border border-white/10 group transition-transform duration-500 hover:scale-[1.02] cursor-pointer w-full max-w-[340px] sm:max-w-[400px] lg:max-w-[480px] aspect-[1/1.414]"
               onClick={() => setIsEnlarged(true)} 
             >
               <img 
@@ -181,7 +218,7 @@ const CertificateView = ({ certId, setTelemetryData }) => {
               </div>
             </div>
           ) : (
-            <div className="w-full max-w-[340px] sm:max-w-[400px] lg:max-w-none lg:w-auto lg:h-[72vh] aspect-[1/1.414] rounded-xl sm:rounded-2xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-md flex flex-col items-center justify-center text-indigo-400 gap-3 sm:gap-4 shadow-2xl mx-auto">
+            <div className="w-full max-w-[340px] sm:max-w-[400px] lg:max-w-[480px] aspect-[1/1.414] rounded-xl sm:rounded-2xl border border-white/[0.05] bg-white/[0.02] backdrop-blur-md flex flex-col items-center justify-center text-indigo-400 gap-3 sm:gap-4 shadow-2xl mx-auto">
                <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin opacity-80" />
                <p className="text-xs sm:text-sm tracking-widest uppercase font-bold text-indigo-300/80 drop-shadow-sm px-4 text-center">Rendering Matrix Canvas...</p>
             </div>
@@ -189,7 +226,6 @@ const CertificateView = ({ certId, setTelemetryData }) => {
         </div>
       </div>
 
-      {/* Deep Glass Modal Viewer */}
       {isEnlarged && previewImage && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#08080C]/90 backdrop-blur-2xl animate-fade-in"
