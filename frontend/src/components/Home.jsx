@@ -70,7 +70,7 @@ const Home = ({ setCurrentView }) => {
         
         <div className="flex flex-wrap justify-center gap-4 opacity-0 animate-[slideUp_0.5s_ease-out_0.4s_forwards]">
           <button 
-            onClick={() => setCurrentView('Verify')} 
+            onClick={() => setCurrentView('verify')} 
             className="px-8 py-4 rounded-full bg-white text-black font-bold hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all duration-300 flex items-center gap-2 group shadow-xl"
           >
             Claim Your Certificate 

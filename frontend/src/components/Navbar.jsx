@@ -34,7 +34,7 @@ const Navbar = ({ currentView, setCurrentView }) => {
           </button>
           
           <button 
-            onClick={() => setCurrentView('Verify')} 
+            onClick={() => setCurrentView('verify')} 
             className="group relative px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-bold text-black transition-all duration-300 rounded-full bg-white/90 hover:bg-white shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] flex items-center gap-1.5 sm:gap-2 hover:-translate-y-0.5 whitespace-nowrap"
           >
             <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 group-hover:text-indigo-800 transition-colors" />
