@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar';
-import Dashboard from './components/Dashboard';
+import Home from './components/Home';
 import Verify from './components/Verify';
 import CertificateView from './components/CertificateView';
 import About from './components/About';
@@ -68,7 +68,7 @@ const LiquidGlobalBackground = () => {
 };
 
 const App = () => {
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [currentView, setCurrentView] = useState('home');
   const [certId, setCertId] = useState(null);
   const [telemetryData, setTelemetryData] = useState(null);
 
@@ -93,7 +93,7 @@ const App = () => {
         if (['verify', 'about'].includes(currentRoute)) {
           setCurrentView(currentRoute);
         } else {
-          setCurrentView('dashboard');
+          setCurrentView('home');
         }
       }
     };
@@ -107,7 +107,7 @@ const App = () => {
   const handleSetView = (view) => {
     setCurrentView(view);
     
-    const newUrl = view === 'dashboard' ? `${basePath}/` : `${basePath}/${view}`;
+    const newUrl = view === 'home' ? `${basePath}/` : `${basePath}/${view}`;
     window.history.pushState(null, '', newUrl);
   };
 
@@ -120,7 +120,7 @@ const App = () => {
         <Navbar currentView={currentView} setCurrentView={handleSetView} />
         
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12 flex flex-col overflow-hidden">
-          {currentView === 'dashboard' && <Dashboard setCurrentView={handleSetView} />}
+          {currentView === 'home' && <Home setCurrentView={handleSetView} />}
           {currentView === 'verify' && <Verify setCurrentView={handleSetView} />}
           {currentView === 'certificate' && <CertificateView certId={certId} setTelemetryData={setTelemetryData} />}
           {currentView === 'about' && <About />}
