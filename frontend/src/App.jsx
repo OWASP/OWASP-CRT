@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
-import Wizard from './components/Wizard';
+import Verify from './components/Verify';
 import CertificateView from './components/CertificateView';
 import About from './components/About';
 
@@ -72,18 +72,44 @@ const App = () => {
   const [certId, setCertId] = useState(null);
   const [telemetryData, setTelemetryData] = useState(null);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('id');
-    const status = params.get('status');
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-    if (id) {
-      setCertId(id);
-      setCurrentView('certificate');
-    } else if (status === 'success' || status === 'error') {
-      setCurrentView('wizard');
-    }
-  }, []);
+  useEffect(() => {
+    const handleNavigation = () => {
+      const params = new URLSearchParams(window.location.search);
+      const path = window.location.pathname;
+      
+      const id = params.get('id');
+      const status = params.get('status');
+
+      if (id) {
+        setCertId(id);
+        setCurrentView('certificate');
+      } else if (status === 'success' || status === 'error') {
+        setCurrentView('verify');
+      } else {
+        const currentRoute = path.replace(basePath, '').replace(/^\//, '');
+
+        if (['verify', 'about'].includes(currentRoute)) {
+          setCurrentView(currentRoute);
+        } else {
+          setCurrentView('dashboard');
+        }
+      }
+    };
+
+    handleNavigation();
+
+    window.addEventListener('popstate', handleNavigation);
+    return () => window.removeEventListener('popstate', handleNavigation);
+  }, [basePath]);
+
+  const handleSetView = (view) => {
+    setCurrentView(view);
+    
+    const newUrl = view === 'dashboard' ? `${basePath}/` : `${basePath}/${view}`;
+    window.history.pushState(null, '', newUrl);
+  };
 
   return (
     <div className="min-h-[100dvh] w-full relative bg-transparent text-white font-sans flex flex-col">
@@ -91,11 +117,11 @@ const App = () => {
       <LiquidGlobalBackground />
 
       <div className="relative z-10 flex flex-col min-h-[100dvh]">
-        <Navbar currentView={currentView} setCurrentView={setCurrentView} />
+        <Navbar currentView={currentView} setCurrentView={handleSetView} />
         
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12 flex flex-col overflow-hidden">
-          {currentView === 'dashboard' && <Dashboard setCurrentView={setCurrentView} />}
-          {currentView === 'wizard' && <Wizard setCurrentView={setCurrentView} />}
+          {currentView === 'dashboard' && <Dashboard setCurrentView={handleSetView} />}
+          {currentView === 'verify' && <Verify setCurrentView={handleSetView} />}
           {currentView === 'certificate' && <CertificateView certId={certId} setTelemetryData={setTelemetryData} />}
           {currentView === 'about' && <About />}
         </main>

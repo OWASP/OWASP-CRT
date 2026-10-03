@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Download, Share2, Linkedin, AlertCircle, Loader2, GitCommit, FolderGit2, FilePlus, FileMinus, Award, CheckCircle2, X, Maximize, Target, Github } from 'lucide-react';
+import { Download, Share2, Linkedin, AlertCircle, Loader2, GitCommit, FolderGit2, FilePlus, FileMinus, Award, CheckCircle2, X, Maximize, Target, Github, ShieldAlert } from 'lucide-react';
 import { jsPDF } from "jspdf";
 import qrcode from 'qrcode-generator';
+
 import { APP_CONFIG } from '../config';
 
 const CertificateView = ({ certId, setTelemetryData }) => {
@@ -425,14 +426,13 @@ const CertificateView = ({ certId, setTelemetryData }) => {
 
   if (error) {
     return (
-      <div className="w-full max-w-xl mx-auto my-auto animate-fade-in px-4">
-        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] shadow-2xl rounded-3xl w-full p-10 md:p-12 text-center flex flex-col items-center">
-          <div className="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
-            <AlertCircle className="w-10 h-10 text-red-400" />
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-bold mb-3 text-white">Access Denied</h2>
-          <p className="text-zinc-400 text-sm sm:text-base">{error === "NO_ID_PROVIDED" ? "No identity parameter provided. Please use the Wizard to claim your certificate." : "The requested certificate identity could not be found."}</p>
-        </div>
+      <div className="flex flex-col items-center justify-center text-center p-8 bg-red-500/10 border border-red-500/20 rounded-3xl max-w-lg mx-auto mt-20 backdrop-blur-md">
+        <ShieldAlert className="w-16 h-16 text-rose-400 mb-4" />
+        <h2 className="text-2xl font-bold text-white mb-2">Certificate Not Found</h2>
+        <p className="text-zinc-400 leading-relaxed text-sm">
+          We couldn't verify a record for this URL. The link appears to be incomplete or invalid. 
+          If you are reviewing a credential, please request the exact link from the candidate.
+        </p>
       </div>
     );
   }
