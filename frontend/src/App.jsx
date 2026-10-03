@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
 import Wizard from './components/Wizard';
 import CertificateView from './components/CertificateView';
+import About from './components/About';
 
 const LiquidGlobalBackground = () => {
   const blob1 = useRef(null);
@@ -96,6 +97,7 @@ const App = () => {
           {currentView === 'dashboard' && <Dashboard setCurrentView={setCurrentView} />}
           {currentView === 'wizard' && <Wizard setCurrentView={setCurrentView} />}
           {currentView === 'certificate' && <CertificateView certId={certId} setTelemetryData={setTelemetryData} />}
+          {currentView === 'about' && <About />}
         </main>
         
         <footer className="py-6 text-center text-xs text-zinc-500 border-t border-white/[0.05] mt-auto backdrop-blur-md">
