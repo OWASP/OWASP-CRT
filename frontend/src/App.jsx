@@ -4,6 +4,7 @@ import Home from './components/Home';
 import Verify from './components/Verify';
 import CertificateView from './components/CertificateView';
 import About from './components/About';
+import NotFound from './components/NotFound';
 
 const LiquidGlobalBackground = () => {
   const blob1 = useRef(null);
@@ -92,8 +93,10 @@ const App = () => {
 
         if (['verify', 'about'].includes(currentRoute)) {
           setCurrentView(currentRoute);
-        } else {
+        } else if (currentRoute === '') {
           setCurrentView('home');
+        } else {
+          setCurrentView('404');
         }
       }
     };
@@ -124,6 +127,7 @@ const App = () => {
           {currentView === 'verify' && <Verify setCurrentView={handleSetView} />}
           {currentView === 'certificate' && <CertificateView certId={certId} setTelemetryData={setTelemetryData} />}
           {currentView === 'about' && <About />}
+          {currentView === '404' && <NotFound setCurrentView={handleSetView} />}
         </main>
         
         <footer className="py-6 text-center text-xs text-zinc-500 border-t border-white/[0.05] mt-auto backdrop-blur-md">
