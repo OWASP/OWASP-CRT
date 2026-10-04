@@ -18,4 +18,11 @@ routes.forEach(route => {
   );
 });
 
+fs.copyFileSync(
+  path.join(distDir, 'index.html'), 
+  path.join(distDir, '404.html')
+);
+
+fs.writeFileSync(path.join(distDir, '.nojekyll'), '');
+
 console.log('Real static routes generated successfully!');
