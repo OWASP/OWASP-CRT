@@ -88,7 +88,7 @@ const App = () => {
       } else if (status === 'success' || status === 'error') {
         setCurrentView('verify');
       } else {
-        const currentRoute = path.replace(basePath, '').replace(/^\//, '');
+        const currentRoute = path.replace(basePath, '').replace(/^\/|\/$/g, '');
 
         if (['verify', 'about'].includes(currentRoute)) {
           setCurrentView(currentRoute);
