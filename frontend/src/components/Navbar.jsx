@@ -35,16 +35,7 @@ const Navbar = ({ currentView, setCurrentView }) => {
           >
             About
           </button>
-          <button
-          onClick={() => setCurrentView('hall-of-fame')}
-          className={`text-[11px] sm:text-sm font-medium transition-colors ${
-            currentView === 'hall-of-fame'
-              ? 'text-white'
-              : 'text-zinc-400 hover:text-white'
-          }`}
-        >
-          Hall of Fame
-        </button>
+          
           
           <button 
             onClick={() => setCurrentView('verify')} 
