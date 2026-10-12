@@ -19,10 +19,6 @@ The official interactive web operating system and certificate viewer interface f
 front/
 ├── src/
 │   ├── components/
-│   │   ├── apps/          # OS Applications (Terminal, CertificateViewer, SystemGuide, etc.)
-│   │   ├── DesktopIcons.jsx
-│   │   ├── OSWindow.jsx
-│   │   └── Taskbar.jsx
 │   ├── App.jsx
 │   ├── config.js          # Production & Repository Environment Variables
 │   ├── index.css
