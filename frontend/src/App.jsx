@@ -91,10 +91,7 @@ const App = () => {
       } else {
         const currentRoute = path.replace(basePath, '').replace(/^\/|\/$/g, '');
 
-        if (currentRoute === 'hall-of-fame') {
-          // Preserve old links by redirecting them to About.
-          setCurrentView('about');
-        } else if (['verify', 'about'].includes(currentRoute)) {
+        if (['verify', 'about'].includes(currentRoute)) {
           setCurrentView(currentRoute);
         } else if (currentRoute === '') {
           setCurrentView('home');
