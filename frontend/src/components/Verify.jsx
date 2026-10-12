@@ -18,6 +18,26 @@ const Verify = ({ setCurrentView }) => {
     const userId = params.get('userid');
     const urlErrorMsg = params.get('message');
 
+    const pendingAt = Number(
+      sessionStorage.getItem('crt_oauth_pending')
+    );
+    
+    const callbackIsFresh =
+      Number.isFinite(pendingAt) &&
+      Date.now() - pendingAt <= 10 * 60 * 1000;
+    
+    if (!status || !callbackIsFresh) {
+      return;
+    }
+    
+    sessionStorage.removeItem('crt_oauth_pending');
+    
+    window.history.replaceState(
+      null,
+      '',
+      window.location.pathname
+    );
+    
     if (status) {
       hasStarted.current = true;
       const isValidUser = user && /^[a-zA-Z0-9-]{1,39}$/.test(user);
@@ -114,10 +134,18 @@ const Verify = ({ setCurrentView }) => {
   };
 
   const handleConnect = () => {
-    setIsProcessing(true);
-    const oauthUrl = `${APP_CONFIG.worker.baseUrl}/start?name=${encodeURIComponent(name)}`;
-    window.location.href = oauthUrl;
-  };
+  setIsProcessing(true);
+
+  sessionStorage.setItem(
+    'crt_oauth_pending',
+    String(Date.now())
+  );
+
+  const oauthUrl =
+    `${APP_CONFIG.worker.baseUrl}/start?name=${encodeURIComponent(name)}`;
+
+  window.location.href = oauthUrl;
+};
 
   return (
     <div className="flex-1 flex items-center justify-center animate-fade-in w-full h-full min-h-[60vh] relative z-10">
