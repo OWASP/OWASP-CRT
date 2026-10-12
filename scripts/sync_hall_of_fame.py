@@ -62,7 +62,7 @@ for line in merged_prs.splitlines():
 
 result = sorted(
     contributors.values(),
-    key=lambda item: item["name"].lower(),
+    key=lambda item: str(item.get("name", "")).lower(),
 )
 
 DATA_FILE.write_text(
