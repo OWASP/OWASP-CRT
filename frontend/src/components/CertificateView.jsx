@@ -1,3 +1,4 @@
+import ScoreBreakdown from './ScoreBreakdown';
 import React, { useEffect, useRef, useState } from 'react';
 import { Download, Linkedin, AlertCircle, Loader2, GitCommit, FolderGit2, FilePlus, Award, CheckCircle2, X, Maximize, Target, Github, ShieldAlert, Copy, Share2 } from 'lucide-react';
 import { jsPDF } from "jspdf";
