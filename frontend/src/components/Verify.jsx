@@ -26,7 +26,12 @@ const Verify = ({ setCurrentView }) => {
       Number.isFinite(pendingAt) &&
       Date.now() - pendingAt <= 10 * 60 * 1000;
     
-    if (!status || !callbackIsFresh) {
+    if (!status) {
+      return;
+    }
+
+    if (!callbackIsFresh) {
+      setErrorMsg("Your verification session has expired. Please try connecting with GitHub again.");
       return;
     }
     
