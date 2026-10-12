@@ -18,6 +18,31 @@ const Verify = ({ setCurrentView }) => {
     const userId = params.get('userid');
     const urlErrorMsg = params.get('message');
 
+    const rawPending = sessionStorage.getItem('crt_oauth_pending');
+    const pendingAt = rawPending ? Number(rawPending) : null;
+    
+    const callbackIsFresh =
+      pendingAt && 
+      Number.isFinite(pendingAt) &&
+      Date.now() - pendingAt <= 10 * 60 * 1000;
+    
+    if (!status) {
+      return;
+    }
+
+    if (!callbackIsFresh) {
+      setErrorMsg("Your verification session has expired. Please try connecting with GitHub again.");
+      return;
+    }
+    
+    sessionStorage.removeItem('crt_oauth_pending');
+    
+    window.history.replaceState(
+      null,
+      '',
+      window.location.pathname
+    );
+    
     if (status) {
       hasStarted.current = true;
       const isValidUser = user && /^[a-zA-Z0-9-]{1,39}$/.test(user);
@@ -28,7 +53,16 @@ const Verify = ({ setCurrentView }) => {
         setStep(1);
         setErrorMsg(urlErrorMsg || "Authentication failed or malformed identity detected.");
       }
-    }
+hasStarted.current = true;
+const isValidUser = user && /^[a-zA-Z0-9-]{1,39}$/.test(user);
+
+if (status === 'success' && isValidUser && userId) {
+  setStep(3);
+  pollForCertificate(user, userId);
+} else {
+  setStep(1);
+  setErrorMsg(urlErrorMsg || "Authentication failed or malformed identity detected.");
+}
   }, []);
 
   const pollForCertificate = async (username, userId) => {
@@ -114,10 +148,18 @@ const Verify = ({ setCurrentView }) => {
   };
 
   const handleConnect = () => {
-    setIsProcessing(true);
-    const oauthUrl = `${APP_CONFIG.worker.baseUrl}/start?name=${encodeURIComponent(name)}`;
-    window.location.href = oauthUrl;
-  };
+  setIsProcessing(true);
+
+  sessionStorage.setItem(
+    'crt_oauth_pending',
+    String(Date.now())
+  );
+
+  const oauthUrl =
+    `${APP_CONFIG.worker.baseUrl}/start?name=${encodeURIComponent(name)}`;
+
+  window.location.href = oauthUrl;
+};
 
   return (
     <div className="flex-1 flex items-center justify-center animate-fade-in w-full h-full min-h-[60vh] relative z-10">
