@@ -41,25 +41,28 @@ jobs:
         with:
           fail-on-severity: high
 
-  npm-audit:
-    name: npm audit
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm install --no-audit --no-fund
-
-      - name: Audit dependencies
-        working-directory: frontend
-        run: npm audit --audit-level=high
+    npm-audit:
+      name: npm audit
+      runs-on: ubuntu-latest
+      permissions:
+        contents: read
+  
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v5
+  
+        - name: Setup Node.js
+          uses: actions/setup-node@v5
+          with:
+            node-version: 24
+  
+        - name: Install dependencies
+          working-directory: frontend
+          run: npm install --no-audit --no-fund
+  
+        - name: Audit dependencies
+          working-directory: frontend
+          run: npm audit --audit-level=high
 
   secret-scan:
     name: Secret scan
