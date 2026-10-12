@@ -40,17 +40,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          branch="chore/update-hall-of-fame-${GITHUB_RUN_ID}"
+          branch="chore/update-hall-of-fame"
           git checkout -b "$branch"
           git add hall-of-fame.json
           git commit -m "chore: update Hall of Fame contributors"
-          git push --set-upstream origin "$branch"
+          git push --force --set-upstream origin "$branch"
 
           gh pr create \
             --base main \
             --head "$branch" \
             --title "chore: update Hall of Fame contributors" \
-            --body "Automatically generated from merged pull requests."
+            --body "Automatically generated from merged pull requests." || true
 
         env:
           GH_TOKEN: ${{ github.token }}
