@@ -1,0 +1,56 @@
+name: Update Hall of Fame
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Synchronize merged contributors
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python3 scripts/sync_hall_of_fame.py
+
+      - name: Create update branch
+        id: changes
+        run: |
+          if git diff --quiet -- hall-of-fame.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          branch="chore/update-hall-of-fame-${GITHUB_RUN_ID}"
+          git checkout -b "$branch"
+          git add hall-of-fame.json
+          git commit -m "chore: update Hall of Fame contributors"
+          git push --set-upstream origin "$branch"
+
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "chore: update Hall of Fame contributors" \
+            --body "Automatically generated from merged pull requests."
+
+        env:
+          GH_TOKEN: ${{ github.token }}
