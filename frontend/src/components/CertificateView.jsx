@@ -124,6 +124,7 @@ const CertificateView = ({ certId, setTelemetryData }) => {
                 <StatCard title="Projects" value={stats.project_count || '0'} icon={FolderGit2} color="text-blue-400" bg="bg-blue-500/10" border="border-blue-500/20" />
                 <StatCard title="Lines Added" value={`+${stats.lines_added || '0'}`} icon={FilePlus} color="text-emerald-400" bg="bg-emerald-500/10" border="border-emerald-500/20" />
                 <StatCard title="Tier" value={currentTier} icon={Award} color={tierColor} bg={tierBg} border={tierBorder} />
+                <ScoreBreakdown certificate={certUser} />
               </div>
 
               {stats.repositories && stats.repositories.length > 0 && (
