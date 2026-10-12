@@ -48,7 +48,16 @@ const Verify = ({ setCurrentView }) => {
         setStep(1);
         setErrorMsg(urlErrorMsg || "Authentication failed or malformed identity detected.");
       }
-    }
+hasStarted.current = true;
+const isValidUser = user && /^[a-zA-Z0-9-]{1,39}$/.test(user);
+
+if (status === 'success' && isValidUser && userId) {
+  setStep(3);
+  pollForCertificate(user, userId);
+} else {
+  setStep(1);
+  setErrorMsg(urlErrorMsg || "Authentication failed or malformed identity detected.");
+}
   }, []);
 
   const pollForCertificate = async (username, userId) => {
