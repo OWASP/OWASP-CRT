@@ -32,7 +32,7 @@ command = [
     "--paginate",
     f"/repos/{repository}/pulls?state=closed&per_page=100",
     "--jq",
-    ".[] | select(.merged_at != null) | [.user.login, .user.html_url] | @tsv",
+    ".[] | select(.merged_at != null and .user != null) | [.user.login, .user.html_url] | @tsv",
 ]
 
 merged_prs = subprocess.check_output(command, text=True)
