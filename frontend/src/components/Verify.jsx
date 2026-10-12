@@ -18,11 +18,11 @@ const Verify = ({ setCurrentView }) => {
     const userId = params.get('userid');
     const urlErrorMsg = params.get('message');
 
-    const pendingAt = Number(
-      sessionStorage.getItem('crt_oauth_pending')
-    );
+    const rawPending = sessionStorage.getItem('crt_oauth_pending');
+    const pendingAt = rawPending ? Number(rawPending) : null;
     
     const callbackIsFresh =
+      pendingAt && 
       Number.isFinite(pendingAt) &&
       Date.now() - pendingAt <= 10 * 60 * 1000;
     
