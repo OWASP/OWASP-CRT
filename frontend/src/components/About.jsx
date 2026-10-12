@@ -50,6 +50,22 @@ const PROJECT_LEADERS_DATA = [
   }
 ];
 
+const getGithubUrl = (value) => {
+  const raw = String(value || '').trim();
+
+  if (!raw) return null;
+
+  if (/^https:\/\/github\.com\/[A-Za-z0-9-]+\/?$/.test(raw)) {
+    return raw.replace(/\/$/, '');
+  }
+
+  if (/^[A-Za-z0-9-]+$/.test(raw)) {
+    return `https://github.com/${raw}`;
+  }
+
+  return null;
+};
+
 const About = () => {
   const [hallOfFameData, setHallOfFameData] = useState([]);
   const [isLoadingHof, setIsLoadingHof] = useState(true);
@@ -148,13 +164,21 @@ const About = () => {
       ) : hallOfFameData.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-16 animate-[slideUp_0.5s_ease-out_0.6s_forwards] opacity-0">
           {hallOfFameData.map((user) => {
-            const displayName = (!user.name || user.name.toLowerCase() === 'null') ? user.github : user.name;
+        const githubUrl = getGithubUrl(user.github);
+        const githubHandle = githubUrl
+          ? githubUrl.replace('https://github.com/', '')
+          : '';
+      
+        const displayName =
+          !user.name || user.name.toLowerCase() === 'null'
+            ? githubHandle || 'Contributor'
+            : user.name;
 
             return (
               <div key={user.id} className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] hover:border-white/[0.12] shadow-lg rounded-2xl p-5 flex items-center gap-5 transition-all duration-300 hover:bg-white/[0.04] group">
                 <div className="relative">
                   <img 
-                    src={`https://github.com/${user.github}.png`} 
+                    src={githubUrl ? `${githubUrl}.png` : undefined}
                     alt={displayName} 
                     className="w-14 h-14 rounded-full object-cover border border-white/10 bg-[#08080C]"
                     onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1a1a2e&color=fff`; }}
@@ -166,9 +190,16 @@ const About = () => {
                 
                 <div className="flex-1 min-w-0">
                   <h4 className="text-base font-bold text-white truncate group-hover:text-yellow-400/90 transition-colors">{displayName}</h4>
-                  <a href={`https://github.com/${user.github}`} target="_blank" rel="noopener noreferrer" className="text-xs text-zinc-400 hover:text-white transition-colors flex items-center gap-1 mt-0.5">
-                    <Github className="w-3 h-3" /> @{user.github}
-                  </a>
+                  {githubUrl && (
+                    <a
+                      href={githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-zinc-400 hover:text-white transition-colors flex items-center gap-1 mt-0.5"
+                    >
+                      <Github className="w-3 h-3" /> @{githubHandle}
+                    </a>
+                  )}
                 </div>
                 
               </div>
