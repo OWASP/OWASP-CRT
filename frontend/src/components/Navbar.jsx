@@ -36,7 +36,6 @@ const Navbar = ({ currentView, setCurrentView }) => {
             About
           </button>
           
-          
           <button 
             onClick={() => setCurrentView('verify')} 
             className="group relative px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-bold text-black transition-all duration-300 rounded-full bg-white/90 hover:bg-white shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] flex items-center gap-1.5 sm:gap-2 hover:-translate-y-0.5 whitespace-nowrap"
