@@ -5,7 +5,6 @@ import Verify from './components/Verify';
 import CertificateView from './components/CertificateView';
 import About from './components/About';
 import NotFound from './components/NotFound';
-import HallOfFame from './components/HallOfFame';
 
 const LiquidGlobalBackground = () => {
   const blob1 = useRef(null);
@@ -92,7 +91,7 @@ const App = () => {
       } else {
         const currentRoute = path.replace(basePath, '').replace(/^\/|\/$/g, '');
 
-        if (['verify', 'about', 'hall-of-fame'].includes(currentRoute)) {
+        if (['verify', 'about'].includes(currentRoute)) {
           setCurrentView(currentRoute);
         } else if (currentRoute === '') {
           setCurrentView('home');
@@ -128,7 +127,6 @@ const App = () => {
           {currentView === 'verify' && <Verify setCurrentView={handleSetView} />}
           {currentView === 'certificate' && <CertificateView certId={certId} setTelemetryData={setTelemetryData} />}
           {currentView === 'about' && <About />}
-          {currentView === 'hall-of-fame' && <HallOfFame />}
           {currentView === '404' && <NotFound setCurrentView={handleSetView} />}
         </main>
         
