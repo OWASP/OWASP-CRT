@@ -1,0 +1,39 @@
+name: Data validation
+
+on:
+  pull_request:
+    paths:
+      - "hall-of-fame.json"
+      - "data/**"
+      - "scripts/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Validate Hall of Fame
+        run: python3 scripts/validate-hall-of-fame.py
+
+      - name: Validate JSON files
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          files = [Path("hall-of-fame.json")]
+          files.extend(Path("data").rglob("*.json") if Path("data").exists() else [])
+
+          for path in files:
+              json.loads(path.read_text())
+              print(f"valid: {path}")
+          PY
