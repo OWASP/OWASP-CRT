@@ -30,8 +30,8 @@ jobs:
       - name: Generate checksums
         working-directory: frontend
         run: |
-          tar -czf ow asp-crt-${GITHUB_REF_NAME}.tar.gz dist
-          sha256sum ow asp-crt-${GITHUB_REF_NAME}.tar.gz > SHA256SUMS.txt
+          tar -czf owasp-crt-${GITHUB_REF_NAME}.tar.gz dist
+          sha256sum owasp-crt-${GITHUB_REF_NAME}.tar.gz > SHA256SUMS.txt
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
