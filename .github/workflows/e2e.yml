@@ -11,16 +11,11 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - name: Setup frontend
+        uses: ./.github/actions/setup-frontend
         with:
-          node-version: 20
-          
-
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm install --no-audit --no-fund
+          node-version: "24"
 
       - name: Build application
         working-directory: frontend
