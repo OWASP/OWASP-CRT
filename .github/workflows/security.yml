@@ -49,16 +49,12 @@ jobs:
   
       steps:
         - name: Checkout repository
-          uses: actions/checkout@v5
+          uses: actions/checkout@v7
   
-        - name: Setup Node.js
-          uses: actions/setup-node@v5
+        - name: Setup frontend
+          uses: ./.github/actions/setup-frontend
           with:
-            node-version: 24
-  
-        - name: Install dependencies
-          working-directory: frontend
-          run: npm install --no-audit --no-fund
+            node-version: "24"
   
         - name: Audit dependencies
           working-directory: frontend
