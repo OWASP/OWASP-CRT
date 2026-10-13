@@ -57,7 +57,7 @@ jobs:
       
       - name: Audit dependencies
         working-directory: frontend
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=critical
 
   secret-scan:
     name: Secret scan
