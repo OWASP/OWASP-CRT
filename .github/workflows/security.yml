@@ -76,23 +76,3 @@ jobs:
             -v "$GITHUB_WORKSPACE:/repo" \
             zricethezav/gitleaks:v8.24.2 \
             detect --source=/repo --no-banner --redact
-
-  build:
-    name: Production build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 24
-
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm install --no-audit --no-fund
-
-      - name: Build
-        working-directory: frontend
-        run: npm run build
