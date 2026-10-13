@@ -1,0 +1,38 @@
+name: Release verification
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup frontend
+        uses: ./.github/actions/setup-frontend
+        with:
+          node-version: "24"
+
+      - name: Build release
+        working-directory: frontend
+        run: npm run build
+
+      - name: Generate checksums
+        working-directory: frontend
+        run: |
+          tar -czf owasp-crt-${GITHUB_REF_NAME}.tar.gz dist
+          sha256sum owasp-crt-${GITHUB_REF_NAME}.tar.gz > SHA256SUMS.txt
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-crt-${{ github.ref_name }}
+          path: |
+            frontend/owasp-crt-*.tar.gz
+            frontend/SHA256SUMS.txt
