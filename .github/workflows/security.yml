@@ -41,11 +41,11 @@ jobs:
         with:
           fail-on-severity: high
 
-    npm-audit:
-      name: npm audit
-      runs-on: ubuntu-latest
-      permissions:
-        contents: read
+  npm-audit:
+    name: npm audit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
   
       steps:
         - name: Checkout repository
