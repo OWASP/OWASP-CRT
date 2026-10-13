@@ -39,7 +39,7 @@ jobs:
 
       - uses: actions/dependency-review-action@v4
         with:
-          fail-on-severity: critical
+          fail-on-severity: high
 
   npm-audit:
     name: npm audit
@@ -57,7 +57,7 @@ jobs:
       
       - name: Audit dependencies
         working-directory: frontend
-        run: npm audit --audit-level=critical
+        run: npm audit --audit-level=high
 
   secret-scan:
     name: Secret scan
