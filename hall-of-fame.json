@@ -1,7 +1,44 @@
 [
   {
-    "id": 1,
-    "name": "nobody",
-    "github": ""
+    "id": "Dissent-ofc",
+    "name": "Dissent-ofc",
+    "github": "https://github.com/Dissent-ofc",
+    "tier": "Contributor"
+  },
+  {
+    "id": "DylanZahedi",
+    "name": "DylanZahedi",
+    "github": "https://github.com/DylanZahedi",
+    "tier": "Contributor"
+  },
+  {
+    "id": "Galaxy-sc",
+    "name": "Galaxy-sc",
+    "github": "https://github.com/Galaxy-sc",
+    "tier": "Contributor"
+  },
+  {
+    "id": "Ham1dRz",
+    "name": "Ham1dRz",
+    "github": "https://github.com/Ham1dRz",
+    "tier": "Contributor"
+  },
+  {
+    "id": "k3rt4s",
+    "name": "k3rt4s",
+    "github": "https://github.com/k3rt4s",
+    "tier": "Contributor"
+  },
+  {
+    "id": "Mayur021",
+    "name": "Mayur021",
+    "github": "https://github.com/Mayur021",
+    "tier": "Contributor"
+  },
+  {
+    "id": "shubham-s-pandey",
+    "name": "shubham-s-pandey",
+    "github": "https://github.com/shubham-s-pandey",
+    "tier": "Contributor"
   }
 ]
