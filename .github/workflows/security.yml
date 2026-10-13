@@ -46,19 +46,18 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-  
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v7
-  
-        - name: Setup frontend
-          uses: ./.github/actions/setup-frontend
-          with:
-            node-version: "24"
-  
-        - name: Audit dependencies
-          working-directory: frontend
-          run: npm audit --audit-level=high
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      
+      - name: Setup frontend
+        uses: ./.github/actions/setup-frontend
+        with:
+          node-version: "24"
+      
+      - name: Audit dependencies
+        working-directory: frontend
+        run: npm audit --audit-level=high
 
   secret-scan:
     name: Secret scan

@@ -18,7 +18,7 @@ jobs:
           node-version: "24"
       - name: Install frontend dependencies
         working-directory: frontend
-        run: yarn install
+        run: npm ci
 
       - name: Build application
         working-directory: frontend
