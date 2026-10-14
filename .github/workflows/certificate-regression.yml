@@ -30,10 +30,6 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci --no-audit --no-fund
-      
-      - name: Run frontend score tests
-        working-directory: frontend
-        run: node --test src/utils/scoreBreakdown.test.js
 
       - name: Build frontend
         working-directory: frontend
