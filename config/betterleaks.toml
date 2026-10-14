@@ -12561,38 +12561,3 @@ let r = http.get("https://dev.zuplo.com/v1/who-am-i", {
 filter = '''
 entropy(finding["secret"]) < 3.3
 '''
-
-filter = '''
-  matchesAny(attributes["path"], [
-    `(?i)(^|/)config/betterleaks\\.toml$`
-  ]) ||
-  (
-    matchesAny(attributes["path"], [
-      `(?i)(^|/)(README\\.md|docs/.*|\\.env\\.example)$`
-    ]) &&
-    containsAny(finding["secret"], [
-      "example", "placeholder", "your_token", "your-token", "replace-me", "changeme"
-    ])
-  )
-'''
-
-[extend]
-useDefault = true
-
-[[rules]]
-id = "owasp-crt-token-assignment"
-description = "Possible credential assigned to an OWASP-CRT token variable"
-keywords = ["GH_TOKEN", "ADMIN_GITHUB_PAT", "CF_API_TOKEN"]
-regex = '''(?i)(?:GH_TOKEN|ADMIN_GITHUB_PAT|CF_API_TOKEN)\s*[:=]\s*["']?([A-Za-z0-9_./+=-]{20,})["']?'''
-valueGroup = 1
-
-[[rules]]
-id = "owasp-crt-oauth-secret-assignment"
-description = "Possible OAuth client secret assigned in OWASP-CRT configuration"
-keywords = ["CLIENT_SECRET", "OAUTH_CLIENT_SECRET"]
-regex = '''(?i)(?:CLIENT_SECRET|OAUTH_CLIENT_SECRET)\s*[:=]\s*["']?([A-Za-z0-9_./+=-]{20,})["']?'''
-valueGroup = 1
-filter = '''
-  startsWithAny(finding["secret"], ["env.", "process.env.", "secrets.", "import.meta.env."]) ||
-  containsAny(finding["secret"], ["${{", "example", "placeholder"])
-'''
