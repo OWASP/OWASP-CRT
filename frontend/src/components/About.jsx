@@ -50,16 +50,6 @@ const PROJECT_LEADERS_DATA = [
   }
 ];
 
-const SECURITY_RESEARCHERS_DATA = [
-  {
-    id: 1,
-    name: "Adesh Nandkishor Kolte",
-    github: "adeshkolte",
-    advisoryId: "GHSA-2c47-fj4h-ch49",
-    advisoryUrl: "https://github.com/OWASP/OWASP-CRT/security/advisories/GHSA-2c47-fj4h-ch49"
-  }
-];
-
 const getGithubUrl = (value) => {
   const raw = String(value || '').trim();
 
@@ -79,6 +69,8 @@ const getGithubUrl = (value) => {
 const About = () => {
   const [hallOfFameData, setHallOfFameData] = useState([]);
   const [isLoadingHof, setIsLoadingHof] = useState(true);
+  const [securityResearchersData, setSecurityResearchersData] = useState([]);
+  const [isLoadingSecurityResearchers, setIsLoadingSecurityResearchers] = useState(true);
 
   useEffect(() => {
     const fetchHallOfFame = async () => {
@@ -99,7 +91,26 @@ const About = () => {
       }
     };
 
+    const fetchSecurityResearchers = async () => {
+      try {
+        const rawUrl = `https://raw.githubusercontent.com/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/refs/heads/main/security-researchers.json?t=${Date.now()}`;
+        const response = await fetch(rawUrl);
+
+        if (response.ok) {
+          const data = await response.json();
+          setSecurityResearchersData(Array.isArray(data) ? data : []);
+        } else {
+          console.warn("Security researcher data not found or inaccessible.");
+        }
+      } catch (error) {
+        console.error("Error fetching security researcher data:", error);
+      } finally {
+        setIsLoadingSecurityResearchers(false);
+      }
+    };
+
     fetchHallOfFame();
+    fetchSecurityResearchers();
   }, []);
 
   return (
@@ -166,47 +177,75 @@ const About = () => {
         <p className="text-zinc-400 max-w-xl mx-auto">Recognizing researchers who responsibly disclose security vulnerabilities and help make OWASP-CRT safer for everyone.</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto mb-24 animate-[slideUp_0.5s_ease-out_0.6s_forwards] opacity-0">
-        {SECURITY_RESEARCHERS_DATA.map((researcher) => (
-          <div key={researcher.id} className="bg-white/[0.02] backdrop-blur-xl border border-emerald-500/10 hover:border-emerald-500/30 shadow-lg rounded-2xl p-6 flex items-center gap-5 transition-all duration-300 hover:bg-emerald-500/[0.04] group">
-            <a
-              href={`https://github.com/${researcher.github}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0"
-              aria-label={`${researcher.name}'s GitHub profile`}
-            >
-              <img
-                src={`https://github.com/${researcher.github}.png`}
-                alt={researcher.name}
-                className="w-16 h-16 rounded-full object-cover border border-emerald-400/20 bg-[#08080C] transition-transform duration-300 group-hover:scale-105"
-                onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(researcher.name)}&background=08080C&color=34d399`; }}
-              />
-            </a>
+      {isLoadingSecurityResearchers ? (
+        <div className="flex flex-col items-center justify-center py-12 mb-24 animate-[slideUp_0.5s_ease-out_0.6s_forwards] opacity-0">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-500/70 mb-4" />
+          <p className="text-sm text-zinc-500 font-medium tracking-wide uppercase">Loading security acknowledgements...</p>
+        </div>
+      ) : securityResearchersData.length > 0 ? (
+        <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto mb-24 animate-[slideUp_0.5s_ease-out_0.6s_forwards] opacity-0">
+          {securityResearchersData.map((researcher) => {
+            const githubUrl = getGithubUrl(researcher.github);
+            const githubHandle = githubUrl
+              ? githubUrl.replace('https://github.com/', '')
+              : '';
 
-            <div className="flex-1 min-w-0">
-              <h4 className="text-lg font-bold text-white truncate group-hover:text-emerald-300 transition-colors">{researcher.name}</h4>
-              <a
-                href={`https://github.com/${researcher.github}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-zinc-400 hover:text-white transition-colors inline-flex items-center gap-1 mt-1"
-              >
-                <Github className="w-3 h-3" /> @{researcher.github}
-              </a>
-              <a
-                href={researcher.advisoryUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 w-fit flex items-center gap-1.5 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
-              >
-                View security advisory <span className="font-mono text-xs text-emerald-500/80">{researcher.advisoryId}</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          </div>
-        ))}
-      </div>
+            return (
+              <div key={researcher.id} className="bg-white/[0.02] backdrop-blur-xl border border-emerald-500/10 hover:border-emerald-500/30 shadow-lg rounded-2xl p-6 flex items-center gap-5 transition-all duration-300 hover:bg-emerald-500/[0.04] group">
+                {githubUrl ? (
+                  <a
+                    href={githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0"
+                    aria-label={`${researcher.name}'s GitHub profile`}
+                  >
+                    <img
+                      src={`${githubUrl}.png`}
+                      alt={researcher.name}
+                      className="w-16 h-16 rounded-full object-cover border border-emerald-400/20 bg-[#08080C] transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(researcher.name)}&background=08080C&color=34d399`; }}
+                    />
+                  </a>
+                ) : (
+                  <img
+                    alt={researcher.name}
+                    className="w-16 h-16 shrink-0 rounded-full object-cover border border-emerald-400/20 bg-[#08080C]"
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(researcher.name)}&background=08080C&color=34d399`}
+                  />
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-lg font-bold text-white truncate group-hover:text-emerald-300 transition-colors">{researcher.name}</h4>
+                  {githubUrl && (
+                    <a
+                      href={githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-zinc-400 hover:text-white transition-colors inline-flex items-center gap-1 mt-1"
+                    >
+                      <Github className="w-3 h-3" /> @{githubHandle}
+                    </a>
+                  )}
+                  <a
+                    href={researcher.advisoryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 w-fit flex items-center gap-1.5 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+                  >
+                    View security advisory <span className="font-mono text-xs text-emerald-500/80">{researcher.advisoryId}</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="text-center py-10 mb-24 animate-[slideUp_0.5s_ease-out_0.6s_forwards] opacity-0 bg-white/[0.01] border border-white/[0.05] rounded-2xl">
+          <p className="text-zinc-500 text-sm">No security researcher acknowledgements found at the moment.</p>
+        </div>
+      )}
 
       {/* Hall of Fame Section */}
       <div className="text-center mb-10 animate-[slideUp_0.5s_ease-out_0.7s_forwards] opacity-0">
