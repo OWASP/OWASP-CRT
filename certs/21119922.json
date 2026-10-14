@@ -1,0 +1,18 @@
+{
+  "id": "21119922",
+  "user": "adeshkolte",
+  "real_name": "Adesh Kolte",
+  "tier": "Bronze",
+  "score": "0.000311",
+  "last_issued": 1791973400,
+  "stats": {
+    "first_commit_date": "2026-10-14",
+    "merged_commits": "1",
+    "project_count": "1",
+    "lines_added": "33",
+    "lines_removed": "22",
+    "repositories": [
+      "OWASP/OWASP-CRT"
+    ]
+  }
+}
