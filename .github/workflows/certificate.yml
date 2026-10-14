@@ -5,7 +5,7 @@ on:
     types: [generate_cert_event]
 
 concurrency:
-  group: cert-request-${{ github.event.client_payload.github_user }}
+  group: cert-request-${{ github.event.client_payload.github_id }}
   cancel-in-progress: true
 
 jobs:
@@ -124,16 +124,27 @@ jobs:
                       except Exception as e:
                           abort_with_error(f"GraphQL Connection Error: {e}")
 
-              print(f"[*] Fetching Identity for: {user}...")
-              user_query = """query($login: String!) { user(login: $login) { id name createdAt } }"""
-              user_res = run_graphql(user_query, {"login": user})
-              
-              if not user_res or 'errors' in user_res or not user_res.get('data', {}).get('user'):
-                  abort_with_error(f"User Not Found: {user}")
-                  
-              graphql_author_id = user_res['data']['user']['id']
-              github_real_name = user_res['data']['user'].get('name') or ''
-              created_at = user_res['data']['user']['createdAt']
+              print("[*] Fetching the identity bound to the OAuth token...")
+              try:
+                  viewer_req = urllib.request.Request('https://api.github.com/user', headers=headers)
+                  with urllib.request.urlopen(viewer_req) as response:
+                      viewer = json.loads(response.read().decode())
+              except Exception as e:
+                  abort_with_error(f"Authenticated GitHub user could not be resolved: {e}")
+
+              if str(viewer.get('id', '')) != user_id:
+                  abort_with_error("Authenticated GitHub identity does not match the certificate subject.")
+
+              # Use identity data returned for the bearer token, not a second
+              # lookup by mutable username. A GitHub login can change or be
+              # reassigned while this workflow is waiting to start.
+              user = viewer.get('login', '')
+              graphql_author_id = viewer.get('node_id', '')
+              github_real_name = viewer.get('name') or ''
+              created_at = viewer.get('created_at', '')
+
+              if not user or not graphql_author_id or not created_at:
+                  abort_with_error("Authenticated GitHub identity response is incomplete.")
               
               unique_commits = {}
               target_repos_dict = {}
@@ -141,7 +152,6 @@ jobs:
               
               # Pre-populate trusted emails cache
               verified_emails_cache = {
-                  f"{user.lower()}@users.noreply.github.com": True,
                   f"{user_id}+{user.lower()}@users.noreply.github.com": True
               }
 
@@ -210,10 +220,10 @@ jobs:
                   for y in chunk:
                       query_parts.append(f'y{y}: contributionsCollection(from: "{y}-01-01T00:00:00Z", to: "{y}-12-31T23:59:59Z") {{ commitContributionsByRepository(maxRepositories: 100) {{ repository {{ nameWithOwner owner {{ login }} name }} }} }}')
                   
-                  graph_query = f"query($login: String!) {{ user(login: $login) {{ {' '.join(query_parts)} }} }}"
+                  graph_query = f"query($authorId: ID!) {{ node(id: $authorId) {{ ... on User {{ {' '.join(query_parts)} }} }} }}"
                   try:
-                      graph_res = run_graphql(graph_query, {"login": user})
-                      user_data = graph_res.get('data', {}).get('user', {})
+                      graph_res = run_graphql(graph_query, {"authorId": graphql_author_id})
+                      user_data = graph_res.get('data', {}).get('node', {})
                       for y in chunk:
                           collection = user_data.get(f'y{y}', {})
                           for contrib in collection.get('commitContributionsByRepository', []):
@@ -292,7 +302,7 @@ jobs:
               # ==========================================
               print("[*] Phase 4: Parallel Resolution of Squashed/Co-authored...")
 
-              def is_email_owned_by_user(email, expected_username):
+              def is_email_owned_by_user(email, expected_author_id):
                   email = email.lower().strip()
                   if not email or "@" not in email: return False
                   if email in verified_emails_cache: return verified_emails_cache[email]
@@ -304,8 +314,10 @@ jobs:
                       with urllib.request.urlopen(req) as response:
                           res = json.loads(response.read().decode())
                           if res.get('total_count', 0) > 0:
-                              found_login = res['items'][0]['login'].lower()
-                              is_owner = (found_login == expected_username.lower())
+                              is_owner = any(
+                                  item.get('node_id') == expected_author_id
+                                  for item in res.get('items', [])
+                              )
                               verified_emails_cache[email] = is_owner
                               return is_owner
                   except: pass
@@ -330,7 +342,7 @@ jobs:
                   local_c = {}
                   query_parts = []
                   for idx, sha in enumerate(chunk):
-                      query_parts.append(f'c{idx}: object(oid: "{sha}") {{ ... on Commit {{ oid additions deletions committedDate message authors(first: 5) {{ edges {{ node {{ name user {{ login }} }} }} }} }} }}')
+                      query_parts.append(f'c{idx}: object(oid: "{sha}") {{ ... on Commit {{ oid additions deletions committedDate message authors(first: 5) {{ edges {{ node {{ name user {{ id login }} }} }} }} }} }}')
                   
                   gql_query = f'query {{ repository(owner: "{owner}", name: "{repo_name}") {{ {" ".join(query_parts)} }} }}'
                   try:
@@ -347,14 +359,13 @@ jobs:
                           for a_edge in c.get('authors', {}).get('edges', []):
                               node = a_edge.get('node', {})
                               a_user = node.get('user')
-                              if a_user and a_user.get('login', '').lower() == user.lower():
+                              if a_user and a_user.get('id') == graphql_author_id:
                                   is_verified = True
                                   break
                                   
                           # 2. Strict validation for Signed-off-by (Cache-first approach)
                           if not is_verified:
                               msg = c.get('message', '').lower()
-                              u_lower = user.lower()
                               
                               if "signed-off-by:" in msg or "co-authored-by:" in msg:
                                   for line in msg.split('\n'):
@@ -364,7 +375,7 @@ jobs:
                                           email_match = re.search(r'<([^>]+)>', line)
                                           if email_match:
                                               extracted_email = email_match.group(1)
-                                              if is_email_owned_by_user(extracted_email, u_lower):
+                                              if is_email_owned_by_user(extracted_email, graphql_author_id):
                                                   is_verified = True
                                                   break
                                                   
