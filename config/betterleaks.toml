@@ -12562,11 +12562,6 @@ filter = '''
 entropy(finding["secret"]) < 3.3
 '''
 
-[extend]
-useDefault = true
-
-# Do not report Betterleaks' own example patterns when scanning this config.
-# Placeholder filtering remains limited to documentation and example files.
 filter = '''
   matchesAny(attributes["path"], [
     `(?i)(^|/)config/betterleaks\\.toml$`
@@ -12580,6 +12575,9 @@ filter = '''
     ])
   )
 '''
+
+[extend]
+useDefault = true
 
 [[rules]]
 id = "owasp-crt-token-assignment"
