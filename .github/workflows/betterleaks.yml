@@ -26,6 +26,7 @@ jobs:
       - name: Run Betterleaks
         run: |
           docker run --rm \
+            --user "$(id -u):$(id -g)" \
             -v "${GITHUB_WORKSPACE}:/repo:ro" \
             ghcr.io/betterleaks/betterleaks:v2.0.0-rc.1 \
             --config /repo/config/betterleaks.toml \
