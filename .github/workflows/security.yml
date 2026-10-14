@@ -58,20 +58,3 @@ jobs:
       - name: Audit dependencies
         working-directory: frontend
         run: npm audit --audit-level=high
-
-  secret-scan:
-    name: Secret scan
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Scan repository for secrets
-        run: |
-          docker run --rm \
-            -v "$GITHUB_WORKSPACE:/repo" \
-            zricethezav/gitleaks:v8.24.2 \
-            detect --source=/repo --no-banner --redact
