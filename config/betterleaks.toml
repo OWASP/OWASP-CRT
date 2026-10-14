@@ -12565,6 +12565,22 @@ entropy(finding["secret"]) < 3.3
 [extend]
 useDefault = true
 
+# Do not report Betterleaks' own example patterns when scanning this config.
+# Placeholder filtering remains limited to documentation and example files.
+filter = '''
+  matchesAny(attributes["path"], [
+    `(?i)(^|/)config/betterleaks\\.toml$`
+  ]) ||
+  (
+    matchesAny(attributes["path"], [
+      `(?i)(^|/)(README\\.md|docs/.*|\\.env\\.example)$`
+    ]) &&
+    containsAny(finding["secret"], [
+      "example", "placeholder", "your_token", "your-token", "replace-me", "changeme"
+    ])
+  )
+'''
+
 [[rules]]
 id = "owasp-crt-token-assignment"
 description = "Possible credential assigned to an OWASP-CRT token variable"
@@ -12578,12 +12594,7 @@ description = "Possible OAuth client secret assigned in OWASP-CRT configuration"
 keywords = ["CLIENT_SECRET", "OAUTH_CLIENT_SECRET"]
 regex = '''(?i)(?:CLIENT_SECRET|OAUTH_CLIENT_SECRET)\s*[:=]\s*["']?([A-Za-z0-9_./+=-]{20,})["']?'''
 valueGroup = 1
-
 filter = '''
-  matchesAny(attributes["path"], [
-    `(?i)(^|/)(README\\.md|docs/.*|\\.env\\.example)$`
-  ]) &&
-  containsAny(finding["secret"], [
-    "example", "placeholder", "your_token", "your-token", "replace-me", "changeme"
-  ])
+  startsWithAny(finding["secret"], ["env.", "process.env.", "secrets.", "import.meta.env."]) ||
+  containsAny(finding["secret"], ["${{", "example", "placeholder"])
 '''
