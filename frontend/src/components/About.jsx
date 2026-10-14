@@ -50,6 +50,16 @@ const PROJECT_LEADERS_DATA = [
   }
 ];
 
+const SECURITY_RESEARCHERS_DATA = [
+  {
+    id: 1,
+    name: "Adesh Nandkishor Kolte",
+    github: "adeshkolte",
+    advisoryId: "GHSA-2c47-fj4h-ch49",
+    advisoryUrl: "https://github.com/OWASP/OWASP-CRT/security/advisories/GHSA-2c47-fj4h-ch49"
+  }
+];
+
 const getGithubUrl = (value) => {
   const raw = String(value || '').trim();
 
@@ -147,8 +157,59 @@ const About = () => {
         })}
       </div>
 
-      {/* Hall of Fame Section */}
+      {/* Security Vulnerability Reporters Section */}
       <div className="text-center mb-10 animate-[slideUp_0.5s_ease-out_0.5s_forwards] opacity-0">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-6 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+          <Shield className="w-8 h-8 text-emerald-400" />
+        </div>
+        <h3 className="text-3xl font-bold text-white mb-3">Security Vulnerability Reporters</h3>
+        <p className="text-zinc-400 max-w-xl mx-auto">Recognizing researchers who responsibly disclose security vulnerabilities and help make OWASP-CRT safer for everyone.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto mb-24 animate-[slideUp_0.5s_ease-out_0.6s_forwards] opacity-0">
+        {SECURITY_RESEARCHERS_DATA.map((researcher) => (
+          <div key={researcher.id} className="bg-white/[0.02] backdrop-blur-xl border border-emerald-500/10 hover:border-emerald-500/30 shadow-lg rounded-2xl p-6 flex items-center gap-5 transition-all duration-300 hover:bg-emerald-500/[0.04] group">
+            <a
+              href={`https://github.com/${researcher.github}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0"
+              aria-label={`${researcher.name}'s GitHub profile`}
+            >
+              <img
+                src={`https://github.com/${researcher.github}.png`}
+                alt={researcher.name}
+                className="w-16 h-16 rounded-full object-cover border border-emerald-400/20 bg-[#08080C] transition-transform duration-300 group-hover:scale-105"
+                onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(researcher.name)}&background=08080C&color=34d399`; }}
+              />
+            </a>
+
+            <div className="flex-1 min-w-0">
+              <h4 className="text-lg font-bold text-white truncate group-hover:text-emerald-300 transition-colors">{researcher.name}</h4>
+              <a
+                href={`https://github.com/${researcher.github}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-zinc-400 hover:text-white transition-colors inline-flex items-center gap-1 mt-1"
+              >
+                <Github className="w-3 h-3" /> @{researcher.github}
+              </a>
+              <a
+                href={researcher.advisoryUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 w-fit flex items-center gap-1.5 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+              >
+                View security advisory <span className="font-mono text-xs text-emerald-500/80">{researcher.advisoryId}</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Hall of Fame Section */}
+      <div className="text-center mb-10 animate-[slideUp_0.5s_ease-out_0.7s_forwards] opacity-0">
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-500/20 mb-6 shadow-[0_0_30px_rgba(234,179,8,0.15)]">
           <Trophy className="w-8 h-8 text-yellow-400" />
         </div>
@@ -157,12 +218,12 @@ const About = () => {
       </div>
 
       {isLoadingHof ? (
-        <div className="flex flex-col items-center justify-center py-12 animate-[slideUp_0.5s_ease-out_0.6s_forwards] opacity-0">
+        <div className="flex flex-col items-center justify-center py-12 animate-[slideUp_0.5s_ease-out_0.8s_forwards] opacity-0">
           <Loader2 className="w-8 h-8 animate-spin text-yellow-500/70 mb-4" />
           <p className="text-sm text-zinc-500 font-medium tracking-wide uppercase">Syncing Hall of Fame...</p>
         </div>
       ) : hallOfFameData.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-16 animate-[slideUp_0.5s_ease-out_0.6s_forwards] opacity-0">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-16 animate-[slideUp_0.5s_ease-out_0.8s_forwards] opacity-0">
           {hallOfFameData.map((user) => {
         const githubUrl = getGithubUrl(user.github);
         const githubHandle = githubUrl
@@ -207,13 +268,13 @@ const About = () => {
           })}
         </div>
       ) : (
-        <div className="text-center py-10 mb-16 animate-[slideUp_0.5s_ease-out_0.6s_forwards] opacity-0 bg-white/[0.01] border border-white/[0.05] rounded-2xl">
+        <div className="text-center py-10 mb-16 animate-[slideUp_0.5s_ease-out_0.8s_forwards] opacity-0 bg-white/[0.01] border border-white/[0.05] rounded-2xl">
           <p className="text-zinc-500 text-sm">No Hall of Fame records found at the moment.</p>
         </div>
       )}
 
       {/* Open Source Call to Action */}
-      <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] shadow-lg rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 animate-[slideUp_0.5s_ease-out_0.7s_forwards] opacity-0 hover:border-white/[0.1] transition-colors">
+      <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] shadow-lg rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 animate-[slideUp_0.5s_ease-out_0.9s_forwards] opacity-0 hover:border-white/[0.1] transition-colors">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-white/[0.05] flex items-center justify-center border border-white/[0.1]">
             <Code2 className="w-6 h-6 text-zinc-300" />
