@@ -27,6 +27,6 @@ jobs:
         run: |
           docker run --rm \
             -v "${GITHUB_WORKSPACE}:/repo:ro" \
-            ghcr.io/betterleaks/betterleaks:v2 \
+            ghcr.io/betterleaks/betterleaks:v2.0.0-rc.1 \
             --config /repo/config/betterleaks.toml \
             git /repo
