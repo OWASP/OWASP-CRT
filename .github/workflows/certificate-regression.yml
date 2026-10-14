@@ -1,0 +1,36 @@
+name: Certificate Security Regression
+
+on:
+  pull_request:
+    paths:
+      - 'worker/**'
+      - 'algorithm/**'
+      - 'frontend/**'
+      - 'scripts/certificate-*.mjs'
+      - '.github/certificate-policies.json'
+      - '.github/workflows/certificate-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  policy-regression:
+    name: Validate certificate policies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate policy catalog
+        run: node scripts/validate-certificate-policies.mjs
+
+      - name: Run deterministic regression suite
+        run: node scripts/run-certificate-regression.mjs
+
+      - name: Run existing score tests
+        working-directory: frontend
+        run: npm ci && npm test
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
