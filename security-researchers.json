@@ -1,0 +1,9 @@
+[
+  {
+    "id": "adeshkolte",
+    "name": "Adesh Nandkishor Kolte",
+    "github": "https://github.com/adeshkolte",
+    "advisoryId": "GHSA-2c47-fj4h-ch49",
+    "advisoryUrl": "https://github.com/OWASP/OWASP-CRT/security/advisories/GHSA-2c47-fj4h-ch49"
+  }
+]
