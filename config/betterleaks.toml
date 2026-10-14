@@ -31,6 +31,7 @@ matchesAny(attributes["path"], [
   `\.gem$`,
   `verification-metadata\.xml`,
   `Database.refactorlog`,
+  `(?i)(^|/)config/betterleaks\.toml$`,
 ])
 
 '''
