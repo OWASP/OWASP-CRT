@@ -1,0 +1,2575 @@
+[
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0001",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Accept decimal certificate identity 0 without normalizing it through a path operation.",
+    "input": {
+      "value": "0"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "identity",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0002",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Accept decimal certificate identity 1 without normalizing it through a path operation.",
+    "input": {
+      "value": "1"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "identity",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0003",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Accept decimal certificate identity 7 without normalizing it through a path operation.",
+    "input": {
+      "value": "7"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "identity",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0004",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Accept decimal certificate identity 42 without normalizing it through a path operation.",
+    "input": {
+      "value": "42"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "identity",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0005",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Accept decimal certificate identity 12345 without normalizing it through a path operation.",
+    "input": {
+      "value": "12345"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "identity",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0006",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Accept decimal certificate identity 999999 without normalizing it through a path operation.",
+    "input": {
+      "value": "999999"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "identity",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0007",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Accept decimal certificate identity 000123 without normalizing it through a path operation.",
+    "input": {
+      "value": "000123"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "identity",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0008",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Accept decimal certificate identity 12345678901234567890 without normalizing it through a path operation.",
+    "input": {
+      "value": "12345678901234567890"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "identity",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0009",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"\" before making a data request.",
+    "input": {
+      "value": ""
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0010",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \" \" before making a data request.",
+    "input": {
+      "value": " "
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0011",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"-1\" before making a data request.",
+    "input": {
+      "value": "-1"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0012",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"+1\" before making a data request.",
+    "input": {
+      "value": "+1"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0013",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"1.0\" before making a data request.",
+    "input": {
+      "value": "1.0"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0014",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"1/2\" before making a data request.",
+    "input": {
+      "value": "1/2"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0015",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"../1\" before making a data request.",
+    "input": {
+      "value": "../1"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0016",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"..%2f1\" before making a data request.",
+    "input": {
+      "value": "..%2f1"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0017",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"certs/1\" before making a data request.",
+    "input": {
+      "value": "certs/1"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0018",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"1.json\" before making a data request.",
+    "input": {
+      "value": "1.json"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0019",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"0x10\" before making a data request.",
+    "input": {
+      "value": "0x10"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0020",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"1e3\" before making a data request.",
+    "input": {
+      "value": "1e3"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0021",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"１２３\" before making a data request.",
+    "input": {
+      "value": "１２３"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0022",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"1\\n2\" before making a data request.",
+    "input": {
+      "value": "1\n2"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0023",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"1?x=2\" before making a data request.",
+    "input": {
+      "value": "1?x=2"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0024",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"#1\" before making a data request.",
+    "input": {
+      "value": "#1"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0025",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"1\\\\2\" before making a data request.",
+    "input": {
+      "value": "1\\2"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0026",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"null\" before making a data request.",
+    "input": {
+      "value": "null"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0027",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"undefined\" before making a data request.",
+    "input": {
+      "value": "undefined"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0028",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"NaN\" before making a data request.",
+    "input": {
+      "value": "NaN"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0029",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"Infinity\" before making a data request.",
+    "input": {
+      "value": "Infinity"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0030",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"1,2\" before making a data request.",
+    "input": {
+      "value": "1,2"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0031",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"1 2\" before making a data request.",
+    "input": {
+      "value": "1 2"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0032",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \" 1\" before making a data request.",
+    "input": {
+      "value": " 1"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-IDENTITY-VALIDATION-0033",
+    "category": "identity-validation",
+    "severity": "high",
+    "operation": "decimal-id",
+    "description": "Reject path-like or non-decimal certificate identity input \"1 \" before making a data request.",
+    "input": {
+      "value": "1 "
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "identity",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0034",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"Ada Lovelace\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "Ada Lovelace",
+      "expected": "Ada Lovelace"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0035",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"Grace-Hopper\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "Grace-Hopper",
+      "expected": "Grace-Hopper"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0036",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"Alan Turing\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "Alan Turing",
+      "expected": "Alan Turing"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0037",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"O'Connor\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "O'Connor",
+      "expected": "OConnor"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0038",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"Zoë Kravitz\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "Zoë Kravitz",
+      "expected": "Zo Kravitz"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0039",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"  spaced   name  \" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "  spaced   name  ",
+      "expected": "spaced name"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0040",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"name<script>\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "name<script>",
+      "expected": "namescript"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0041",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"<img src=x>\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "<img src=x>",
+      "expected": "img srcx"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0042",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"a_b\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "a_b",
+      "expected": "ab"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0043",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"a.b\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "a.b",
+      "expected": "ab"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0044",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"name/other\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "name/other",
+      "expected": "nameother"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0045",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"emoji 🚀\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "emoji 🚀",
+      "expected": "emoji"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0046",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"12345\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "12345",
+      "expected": null
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0047",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"!!!\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "!!!",
+      "expected": null
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0048",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "",
+      "expected": null
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0049",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"   \" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "   ",
+      "expected": null
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0050",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"aaaaaaaaaaaaaaaaaaaaaaaaa\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaa",
+      "expected": "aaaaaaaaaaaaaaaaaaaa"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0051",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"John--Doe\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "John--Doe",
+      "expected": "John--Doe"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0052",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"a\\tb\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "a\tb",
+      "expected": "a b"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0053",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"A&B\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "A&B",
+      "expected": "AB"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0054",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"safe-name-1\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "safe-name-1",
+      "expected": "safe-name"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0055",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"é\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "é",
+      "expected": null
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0056",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"राम\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "राम",
+      "expected": null
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-PROFILE-INPUT-0057",
+    "category": "profile-input",
+    "severity": "medium",
+    "operation": "safe-name",
+    "description": "Normalize contributor display name \"name\\nnext\" to a bounded safe value before dispatch.",
+    "input": {
+      "value": "name\nnext",
+      "expected": "name next"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "input",
+      "display-name"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0058",
+    "category": "record-integrity",
+    "severity": "medium",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity 100 with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "100",
+      "record": {
+        "id": 100,
+        "tier": "Bronze"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0059",
+    "category": "record-integrity",
+    "severity": "medium",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity 001 with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "001",
+      "record": {
+        "id": "001",
+        "tier": "Silver"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0060",
+    "category": "record-integrity",
+    "severity": "medium",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity 42 with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "42",
+      "record": {
+        "id": 42,
+        "tier": "Gold",
+        "stats": {}
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0061",
+    "category": "record-integrity",
+    "severity": "medium",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity 0 with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "0",
+      "record": {
+        "id": 0
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0062",
+    "category": "record-integrity",
+    "severity": "high",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity 100 with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "100",
+      "record": {
+        "id": 101
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0063",
+    "category": "record-integrity",
+    "severity": "high",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity 100 with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "100",
+      "record": {
+        "id": "1000"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0064",
+    "category": "record-integrity",
+    "severity": "high",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity 100 with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "100",
+      "record": {}
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0065",
+    "category": "record-integrity",
+    "severity": "high",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity 100 with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "100",
+      "record": null
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0066",
+    "category": "record-integrity",
+    "severity": "high",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity ../100 with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "../100",
+      "record": {
+        "id": "../100"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0067",
+    "category": "record-integrity",
+    "severity": "high",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity 100.json with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "100.json",
+      "record": {
+        "id": "100.json"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0068",
+    "category": "record-integrity",
+    "severity": "high",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity 100 with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "100",
+      "record": []
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-INTEGRITY-0069",
+    "category": "record-integrity",
+    "severity": "medium",
+    "operation": "record-identity",
+    "description": "Compare requested certificate identity 100 with the embedded record identity without trusting the path alone.",
+    "input": {
+      "requestedId": "100",
+      "record": {
+        "id": 100,
+        "extra": "<script>"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "record",
+      "idor"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0070",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "{\"id\":1,\"tier\":\"Bronze\"}"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "parser",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0071",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "{\"id\":\"2\",\"stats\":{}}"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "parser",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0072",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "{\"id\":0}"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "parser",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0073",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "{}"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "parser",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0074",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "null"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "parser",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0075",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "[]"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "parser",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0076",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "true"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "parser",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0077",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "\"text\""
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "parser",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0078",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": ""
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "parser",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0079",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "{"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "parser",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0080",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "{\"id\":}"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "parser",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0081",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "{\"__proto__\":{\"polluted\":true}}"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "parser",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0082",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "{\"id\":1,\"nested\":{\"x\":[1,2,3]}}"
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "parser",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0083",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "undefined"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "parser",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-RECORD-PARSING-0084",
+    "category": "record-parsing",
+    "severity": "high",
+    "operation": "json-record",
+    "description": "Parse certificate record content safely and return a structured object only for valid JSON objects.",
+    "input": {
+      "content": "NaN"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "parser",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0085",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": 0,
+      "lastAttempt": 0,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "rate-limit",
+      "available"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0086",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": 99999,
+      "lastAttempt": 0,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "rate-limit",
+      "blocked"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0087",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": 13600,
+      "lastAttempt": 0,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "rate-limit",
+      "available"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0088",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": 0,
+      "lastAttempt": 99999,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "rate-limit",
+      "blocked"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0089",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": 0,
+      "lastAttempt": 13600,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "rate-limit",
+      "available"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0090",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": 99999,
+      "lastAttempt": 99998,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "rate-limit",
+      "blocked"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0091",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": 0,
+      "lastAttempt": 0,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "rate-limit",
+      "available"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0092",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": 100000,
+      "lastAttempt": 0,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "rate-limit",
+      "blocked"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0093",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": 100001,
+      "lastAttempt": 0,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "rate-limit",
+      "blocked"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0094",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": 13601,
+      "lastAttempt": 0,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "rate-limit",
+      "blocked"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0095",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": 0,
+      "lastAttempt": 13601,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "rate-limit",
+      "blocked"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0096",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": -1,
+      "lastAttempt": -1,
+      "seconds": 86400
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "rate-limit",
+      "available"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0097",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": "99999",
+      "lastAttempt": "0",
+      "seconds": 86400
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "rate-limit",
+      "blocked"
+    ]
+  },
+  {
+    "id": "CERT-RATE-LIMIT-0098",
+    "category": "rate-limit",
+    "severity": "high",
+    "operation": "cooldown",
+    "description": "Apply the 24-hour issuance cooldown using the latest valid issuance or attempt timestamp.",
+    "input": {
+      "now": 100000,
+      "lastIssued": "invalid",
+      "lastAttempt": "invalid",
+      "seconds": 86400
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "rate-limit",
+      "available"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0099",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": {
+        "full_name": "Ada Lovelace",
+        "github_user": "ada",
+        "github_id": "1",
+        "user_token": "fixture-token"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "dispatch",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0100",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": {
+        "full_name": "Grace Hopper",
+        "github_user": "grace-hopper",
+        "github_id": "2",
+        "user_token": "fixture-token"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "dispatch",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0101",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": {
+        "full_name": "Alan Turing",
+        "github_user": "alan",
+        "github_id": "3",
+        "user_token": "fixture-token"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "dispatch",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0102",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": {
+        "full_name": "",
+        "github_user": "ada",
+        "github_id": "1",
+        "user_token": "fixture-token"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "dispatch",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0103",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": {
+        "full_name": "Ada",
+        "github_user": "",
+        "github_id": "1",
+        "user_token": "fixture-token"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "dispatch",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0104",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": {
+        "full_name": "Ada",
+        "github_user": "ada",
+        "github_id": "",
+        "user_token": "fixture-token"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "dispatch",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0105",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": {
+        "full_name": "Ada",
+        "github_user": "ada",
+        "github_id": "1",
+        "user_token": ""
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "dispatch",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0106",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": {
+        "full_name": "Ada",
+        "github_user": "ada",
+        "github_id": 1,
+        "user_token": "fixture-token"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "dispatch",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0107",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": {
+        "full_name": "Ada",
+        "github_user": "ada",
+        "github_id": "1",
+        "user_token": null
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "dispatch",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0108",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": {
+        "full_name": "Ada",
+        "github_user": "ada",
+        "github_id": "1"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "dispatch",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0109",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": null
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "dispatch",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0110",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": []
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "dispatch",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-DISPATCH-CONTRACT-0111",
+    "category": "dispatch-contract",
+    "severity": "high",
+    "operation": "dispatch-payload",
+    "description": "Require every server-side certificate dispatch field before starting the GitHub workflow.",
+    "input": {
+      "payload": "payload"
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "dispatch",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0112",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": {
+        "id": "1",
+        "tier": "Bronze"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "schema",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0113",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": {
+        "id": "2",
+        "tier": "Silver"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "schema",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0114",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": {
+        "id": "3",
+        "tier": "Gold"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "schema",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0115",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": {
+        "id": 0,
+        "tier": "Bronze"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "schema",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0116",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": {
+        "id": "001",
+        "tier": "Gold"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "schema",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0117",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": {
+        "id": "1",
+        "tier": "bronze"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "schema",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0118",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": {
+        "id": "1",
+        "tier": "Platinum"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "schema",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0119",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": {
+        "id": "1.0",
+        "tier": "Gold"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "schema",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0120",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": {
+        "id": "../1",
+        "tier": "Gold"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "schema",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0121",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": {
+        "tier": "Gold"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "schema",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0122",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": {
+        "id": "1"
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "schema",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0123",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": null
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "schema",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-CERTIFICATE-SCHEMA-0124",
+    "category": "certificate-schema",
+    "severity": "high",
+    "operation": "certificate-shape",
+    "description": "Require a certificate record to contain a decimal identity and an issued tier.",
+    "input": {
+      "record": []
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "schema",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0125",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": 0,
+        "lines_removed": 0,
+        "merged_commits": 0
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "scoring",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0126",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": 1,
+        "lines_removed": 1,
+        "merged_commits": 1
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "scoring",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0127",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": "100",
+        "lines_removed": "50",
+        "merged_commits": "2"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "scoring",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0128",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": "0",
+        "lines_removed": "0",
+        "merged_commits": "0"
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "scoring",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0129",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": -1,
+        "lines_removed": 0,
+        "merged_commits": 0
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "scoring",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0130",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": 0,
+        "lines_removed": -1,
+        "merged_commits": 0
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "scoring",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0131",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": 0,
+        "lines_removed": 0,
+        "merged_commits": -1
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "scoring",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0132",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": "NaN",
+        "lines_removed": 0,
+        "merged_commits": 0
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "scoring",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0133",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": "Infinity",
+        "lines_removed": 0,
+        "merged_commits": 0
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "scoring",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0134",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": null,
+        "lines_removed": 0,
+        "merged_commits": 0
+      }
+    },
+    "expected": {
+      "result": true
+    },
+    "tags": [
+      "scoring",
+      "positive"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0135",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": 0,
+        "merged_commits": 0
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "scoring",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0136",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": {
+        "lines_added": 0,
+        "lines_removed": 0
+      }
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "scoring",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0137",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": null
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "scoring",
+      "negative"
+    ]
+  },
+  {
+    "id": "CERT-SCORE-INPUT-0138",
+    "category": "score-input",
+    "severity": "medium",
+    "operation": "score-stats",
+    "description": "Accept only finite non-negative contribution metrics before score normalization.",
+    "input": {
+      "stats": []
+    },
+    "expected": {
+      "result": false
+    },
+    "tags": [
+      "scoring",
+      "negative"
+    ]
+  }
+]
