@@ -30,7 +30,7 @@ jobs:
           sha256sum owasp-crt-${GITHUB_REF_NAME}.tar.gz > SHA256SUMS.txt
 
       - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: owasp-crt-${{ github.ref_name }}
           path: |
