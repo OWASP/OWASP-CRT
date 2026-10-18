@@ -1,14 +1,47 @@
-import React, { useState } from 'react';
-import { ArrowRight, Github, ShieldCheck, Zap, X, Maximize } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Github, ShieldCheck, Zap, X, Maximize, Search } from 'lucide-react';
 import { APP_CONFIG } from '../config';
 
-const Home = ({ setCurrentView }) => {
+const Home = ({ setCurrentView, onLookupCertificate }) => {
   const [selectedCert, setSelectedCert] = useState(null);
+  const [lookupInput, setLookupInput] = useState('');
+  const [lookupError, setLookupError] = useState('');
+
+  useEffect(() => {
+    if (!selectedCert) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setSelectedCert(null);
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedCert]);
+
+  const handleLookupSubmit = (e) => {
+    e.preventDefault();
+    const raw = lookupInput.trim();
+    if (!raw) return;
+
+    // Extract numeric ID from inputs like "CRT-OWASP-123 : 2026", "CRT-OWASP-123", "?id=123", or "123"
+    const match = raw.match(/(?:CRT-OWASP-|id=|^)(\d+)/i) || raw.match(/^(\d+)$/);
+    if (match && match[1]) {
+      setLookupError('');
+      onLookupCertificate(match[1]);
+    } else {
+      setLookupError('Please enter a valid numeric ID or CRT-OWASP-XXX code.');
+    }
+  };
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl mx-auto pb-24 relative">
       
-      <section className="flex flex-col items-center text-center pt-12 md:pt-20 min-h-[60vh] justify-center relative z-10">
+      <section className="flex flex-col items-center text-center pt-12 md:pt-20 min-h-[60vh] justify-center relative z-10 w-full">
         
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 opacity-0 animate-[slideUp_0.5s_ease-out_0.2s_forwards] leading-tight text-white drop-shadow-2xl">
           Recognizing the <br className="hidden md:block" />
@@ -17,11 +50,11 @@ const Home = ({ setCurrentView }) => {
           </span>
         </h1>
         
-        <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mb-12 leading-relaxed opacity-0 animate-[slideUp_0.5s_ease-out_0.3s_forwards]">
+        <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mb-10 leading-relaxed opacity-0 animate-[slideUp_0.5s_ease-out_0.3s_forwards]">
           Join the elite network of developers and security researchers securing the open web. Verify your GitHub contributions and claim your officially signed OWASP certificate.
         </p>
         
-        <div className="flex flex-wrap justify-center gap-4 opacity-0 animate-[slideUp_0.5s_ease-out_0.4s_forwards]">
+        <div className="flex flex-wrap justify-center gap-4 mb-12 opacity-0 animate-[slideUp_0.5s_ease-out_0.4s_forwards]">
           <button 
             onClick={() => setCurrentView('verify')} 
             className="cursor-pointer px-8 py-4 rounded-full bg-white text-black font-bold hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all duration-300 flex items-center gap-2 group shadow-xl"
@@ -29,6 +62,32 @@ const Home = ({ setCurrentView }) => {
             Claim Your Certificate 
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </button>
+        </div>
+
+        {/* Quick Certificate Verification Lookup */}
+        <div className="w-full max-w-md opacity-0 animate-[slideUp_0.5s_ease-out_0.45s_forwards]">
+          <form onSubmit={handleLookupSubmit} className="relative flex items-center">
+            <Search className="w-4 h-4 text-zinc-500 absolute left-4 pointer-events-none" />
+            <input
+              type="text"
+              value={lookupInput}
+              onChange={(e) => {
+                setLookupInput(e.target.value);
+                if (lookupError) setLookupError('');
+              }}
+              placeholder="Verify credential by ID (e.g. CRT-OWASP-42 or 42)"
+              className="w-full pl-10 pr-24 py-3 rounded-full bg-white/[0.03] border border-white/[0.08] focus:border-indigo-500/60 focus:bg-white/[0.05] text-xs sm:text-sm text-white placeholder:text-zinc-500 focus:outline-none transition-all backdrop-blur-xl"
+            />
+            <button
+              type="submit"
+              className="absolute right-1.5 px-4 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors border border-white/10"
+            >
+              Verify
+            </button>
+          </form>
+          {lookupError && (
+            <p className="text-xs text-rose-400 mt-2">{lookupError}</p>
+          )}
         </div>
       </section>
 
@@ -108,8 +167,9 @@ const Home = ({ setCurrentView }) => {
             onClick={(e) => e.stopPropagation()}
           >
             <button 
-              className="cursor-pointer absolute -top-16 right-0 md:-right-12 text-white/50 hover:text-white bg-white/[0.05] hover:bg-white/[0.15] border border-white/10 rounded-full p-3 backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:rotate-90 shadow-xl"
+              className="cursor-pointer absolute -top-12 right-0 md:-top-16 md:-right-12 text-white/50 hover:text-white bg-white/[0.05] hover:bg-white/[0.15] border border-white/10 rounded-full p-3 backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:rotate-90 shadow-xl"
               onClick={() => setSelectedCert(null)}
+              aria-label="Close preview"
             >
               <X className="w-6 h-6" />
             </button>

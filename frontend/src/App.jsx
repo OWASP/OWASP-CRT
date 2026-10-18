@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import { Loader2 } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
-import Verify from './components/Verify';
-import CertificateView from './components/CertificateView';
-import About from './components/About';
-import NotFound from './components/NotFound';
+
+const Verify = lazy(() => import('./components/Verify'));
+const CertificateView = lazy(() => import('./components/CertificateView'));
+const About = lazy(() => import('./components/About'));
+const NotFound = lazy(() => import('./components/NotFound'));
 
 const LiquidGlobalBackground = () => {
   const blob1 = useRef(null);
@@ -16,11 +18,11 @@ const LiquidGlobalBackground = () => {
     let animationFrameId;
 
     const animate = () => {
-      frame += 0.012; 
-      
-      const dist1 = 18 + Math.sin(frame) * 5; 
-      const dist2 = 18 + Math.sin(frame + 2) * 5; 
-      const dist3 = 18 + Math.sin(frame + 4) * 5; 
+      frame += 0.012;
+
+      const dist1 = 18 + Math.sin(frame) * 5;
+      const dist2 = 18 + Math.sin(frame + 2) * 5;
+      const dist3 = 18 + Math.sin(frame + 4) * 5;
 
       if (blob1.current) {
         blob1.current.style.transform = `translate(calc(-50% - ${dist1}vw), calc(-50% - ${dist1}vw)) scale(${1 + Math.sin(frame) * 0.05})`;
@@ -34,7 +36,7 @@ const LiquidGlobalBackground = () => {
         blob3.current.style.transform = `translate(-50%, calc(-50% + ${dist3}vw)) scale(${1 + Math.sin(frame + 1) * 0.05})`;
         blob3.current.style.opacity = 0.11 + Math.sin(frame * 1.8) * 0.03;
       }
-      
+
       animationFrameId = requestAnimationFrame(animate);
     };
 
@@ -46,22 +48,22 @@ const LiquidGlobalBackground = () => {
     <div className="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-0 bg-[#08080C]">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(79,70,229,0.06)_0%,_transparent_70%)] z-0"></div>
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_40%,_#08080C_100%)] z-20 opacity-90"></div>
-      
-      <div 
-        ref={blob1} 
-        style={{ opacity: 0.11, transform: 'translate(calc(-50% - 18vw), calc(-50% - 18vw)) scale(1)' }} 
+
+      <div
+        ref={blob1}
+        style={{ opacity: 0.11, transform: 'translate(calc(-50% - 18vw), calc(-50% - 18vw)) scale(1)' }}
         className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-indigo-500 rounded-full blur-[130px] mix-blend-screen z-10"
       ></div>
-      
-      <div 
-        ref={blob2} 
-        style={{ opacity: 0.11, transform: 'translate(calc(-50% + 18vw), calc(-50% - 18vw)) scale(1)' }} 
+
+      <div
+        ref={blob2}
+        style={{ opacity: 0.11, transform: 'translate(calc(-50% + 18vw), calc(-50% - 18vw)) scale(1)' }}
         className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-fuchsia-500 rounded-full blur-[130px] mix-blend-screen z-10"
       ></div>
-      
-      <div 
-        ref={blob3} 
-        style={{ opacity: 0.11, transform: 'translate(-50%, calc(-50% + 18vw)) scale(1)' }} 
+
+      <div
+        ref={blob3}
+        style={{ opacity: 0.11, transform: 'translate(-50%, calc(-50% + 18vw)) scale(1)' }}
         className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-blue-500 rounded-full blur-[130px] mix-blend-screen z-10"
       ></div>
     </div>
@@ -71,7 +73,6 @@ const LiquidGlobalBackground = () => {
 const App = () => {
   const [currentView, setCurrentView] = useState('home');
   const [certId, setCertId] = useState(null);
-  const [telemetryData, setTelemetryData] = useState(null);
 
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -79,7 +80,7 @@ const App = () => {
     const handleNavigation = () => {
       const params = new URLSearchParams(window.location.search);
       const path = window.location.pathname;
-      
+
       const id = params.get('id');
       const status = params.get('status');
 
@@ -116,22 +117,42 @@ const App = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleViewCertificate = (id) => {
+    const cleanId = String(id).trim();
+    if (!cleanId) return;
+    setCertId(cleanId);
+    setCurrentView('certificate');
+    window.history.pushState(null, '', `${basePath}/?id=${encodeURIComponent(cleanId)}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-[100dvh] w-full relative bg-transparent text-white font-sans flex flex-col overflow-x-hidden">
-      
       <LiquidGlobalBackground />
 
       <div className="relative z-10 flex flex-col min-h-[100dvh]">
         <Navbar currentView={currentView} setCurrentView={handleSetView} />
-        
+
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12 flex flex-col">
-          {currentView === 'home' && <Home setCurrentView={handleSetView} />}
-          {currentView === 'verify' && <Verify setCurrentView={handleSetView} />}
-          {currentView === 'certificate' && <CertificateView certId={certId} setTelemetryData={setTelemetryData} />}
-          {currentView === 'about' && <About />}
-          {currentView === '404' && <NotFound setCurrentView={handleSetView} />}
+          <Suspense
+            fallback={
+              <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+              </div>
+            }
+          >
+            {currentView === 'home' && (
+              <Home setCurrentView={handleSetView} onLookupCertificate={handleViewCertificate} />
+            )}
+            {currentView === 'verify' && <Verify setCurrentView={handleSetView} />}
+            {currentView === 'certificate' && (
+              <CertificateView certId={certId} setCurrentView={handleSetView} />
+            )}
+            {currentView === 'about' && <About />}
+            {currentView === '404' && <NotFound setCurrentView={handleSetView} />}
+          </Suspense>
         </main>
-        
+
         <footer className="py-6 text-center text-xs text-zinc-500 border-t border-white/[0.05] mt-auto backdrop-blur-md">
           &copy; {new Date().getFullYear()} OWASP Foundation. Open Source Security.
         </footer>
