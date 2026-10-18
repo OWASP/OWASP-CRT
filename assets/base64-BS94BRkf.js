@@ -1,0 +1,1 @@
+import{u as e}from"./index-BRxN0ayk.js";var t=e(`CheckCircle2`,[[`circle`,{cx:`12`,cy:`12`,r:`10`,key:`1mglay`}],[`path`,{d:`m9 12 2 2 4-4`,key:`dzmm74`}]]),n=e=>{let t=String(e||``).replace(/\s/g,``),n=atob(t),r=Uint8Array.from(n,e=>e.charCodeAt(0)),i=new TextDecoder(`utf-8`).decode(r);return JSON.parse(i)};export{t as n,n as t};
