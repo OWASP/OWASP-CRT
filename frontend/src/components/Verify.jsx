@@ -1,17 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Github, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { APP_CONFIG } from '../config';
+import { decodeBase64Json } from '../utils/base64';
 
-const Verify = ({ setCurrentView }) => {
+const Verify = () => {
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [pollStatus, setPollStatus] = useState('');
+
   const hasStarted = useRef(false);
+  const pollIntervalRef = useRef(null);
+  const redirectTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (hasStarted.current) return;
+
     const params = new URLSearchParams(window.location.search);
     const status = params.get('status');
     const user = params.get('user');
@@ -20,12 +32,12 @@ const Verify = ({ setCurrentView }) => {
 
     const rawPending = sessionStorage.getItem('crt_oauth_pending');
     const pendingAt = rawPending ? Number(rawPending) : null;
-    
+
     const callbackIsFresh =
-      pendingAt && 
+      pendingAt &&
       Number.isFinite(pendingAt) &&
       Date.now() - pendingAt <= 10 * 60 * 1000;
-    
+
     if (!status) {
       return;
     }
@@ -34,31 +46,19 @@ const Verify = ({ setCurrentView }) => {
       setErrorMsg("Your verification session has expired. Please try connecting with GitHub again.");
       return;
     }
-    
+
     sessionStorage.removeItem('crt_oauth_pending');
-    
-    window.history.replaceState(
-      null,
-      '',
-      window.location.pathname
-    );
-    
-    if (status) {
-      hasStarted.current = true;
-      
-      const isValidUser =
-        user && /^[a-zA-Z0-9-]{1,39}$/.test(user);
-      
-      if (status === 'success' && isValidUser && userId) {
-        setStep(3);
-        pollForCertificate(user, userId);
-      } else {
-        setStep(1);
-        setErrorMsg(
-          urlErrorMsg ||
-            "Authentication failed or malformed identity detected."
-        );
-      }
+    window.history.replaceState(null, '', window.location.pathname);
+
+    hasStarted.current = true;
+    const isValidUser = user && /^[a-zA-Z0-9-]{1,39}$/.test(user);
+
+    if (status === 'success' && isValidUser && userId) {
+      setStep(3);
+      pollForCertificate(user, userId);
+    } else {
+      setStep(1);
+      setErrorMsg(urlErrorMsg || "Authentication failed or malformed identity detected.");
     }
   }, []);
 
@@ -68,12 +68,16 @@ const Verify = ({ setCurrentView }) => {
       setStep(1);
       return;
     }
+
     setPollStatus(`Resolving GitHub Identity for @${username}...`);
+
     const apiCertUrl = `https://api.github.com/repos/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/contents/certs/${userId}.json?ref=${APP_CONFIG.github.branch}`;
     const apiAttemptUrl = `https://api.github.com/repos/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/contents/attempts/${userId}.json?ref=${APP_CONFIG.github.branch}`;
-    
+    const rawCertUrl = `https://raw.githubusercontent.com/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/${APP_CONFIG.github.branch}/certs/${userId}.json`;
+
     let initialSha = null;
     let initialAttemptSha = null;
+
     try {
       const [preCert, preAttempt] = await Promise.all([
         fetch(`${apiCertUrl}&t=${Date.now()}`),
@@ -81,48 +85,59 @@ const Verify = ({ setCurrentView }) => {
       ]);
       if (preCert.ok) initialSha = (await preCert.json()).sha;
       if (preAttempt.ok) initialAttemptSha = (await preAttempt.json()).sha;
-    } catch (e) {}
+    } catch (e) {
+      // Ignore pre-check network errors and proceed to polling
+    }
 
     let attempts = 0;
     const maxAttempts = 23;
-    const checkCert = setInterval(async () => {
+
+    pollIntervalRef.current = setInterval(async () => {
       attempts++;
       setPollStatus(`Awaiting GitHub Actions background compilation... (Attempt ${attempts}/${maxAttempts})`);
+
       try {
         const attemptRes = await fetch(`${apiAttemptUrl}&t=${Date.now()}`);
         if (attemptRes.ok) {
           const attemptJson = await attemptRes.json();
           if (!initialAttemptSha || attemptJson.sha !== initialAttemptSha) {
-            const decodedContent = decodeURIComponent(escape(atob(attemptJson.content)));
-            const attemptData = JSON.parse(decodedContent);
+            const attemptData = decodeBase64Json(attemptJson.content);
             const nowSeconds = Math.floor(Date.now() / 1000);
             if (attemptData.status === 'error' && attemptData.last_attempt && (nowSeconds - attemptData.last_attempt < 300)) {
-              clearInterval(checkCert);
+              clearInterval(pollIntervalRef.current);
               setErrorMsg(`${attemptData.message}`);
               setStep(1);
               return;
             }
           }
         }
-        
+
         const res = await fetch(`${apiCertUrl}&t=${Date.now()}`);
         let isUpdated = false;
+
         if (res.ok) {
           const data = await res.json();
-          if (!initialSha || data.sha !== initialSha) isUpdated = true;
-          else if (attempts >= maxAttempts) isUpdated = true;
+          if (!initialSha || data.sha !== initialSha || attempts >= maxAttempts) {
+            isUpdated = true;
+          }
+        } else if (res.status === 403 || res.status === 429) {
+          // Fallback to raw content URL if GitHub REST API rate limit is reached
+          const rawRes = await fetch(`${rawCertUrl}?t=${Date.now()}`);
+          if (rawRes.ok) {
+            isUpdated = true;
+          }
         } else if (res.status === 404 && attempts >= maxAttempts) {
-          clearInterval(checkCert);
+          clearInterval(pollIntervalRef.current);
           setErrorMsg("TIMEOUT: Certificate generation took too long or failed silently.");
           setStep(1);
           return;
         }
-        
+
         if (isUpdated) {
-          clearInterval(checkCert);
+          clearInterval(pollIntervalRef.current);
           setPollStatus("Matrix Generated Successfully!");
           setStep(4);
-          setTimeout(() => {
+          redirectTimeoutRef.current = setTimeout(() => {
             window.location.href = `?id=${userId}&fresh=true`;
           }, 2000);
         }
@@ -135,28 +150,23 @@ const Verify = ({ setCurrentView }) => {
   const handleNext = () => {
     const cleanName = name.trim().replace(/\s+/g, ' ');
     if (!cleanName) return;
+
     if (cleanName.length < 2 || cleanName.length > 20) {
       setErrorMsg(`Name must be between 2 and 20 characters (${cleanName.length}/20).`);
       return;
     }
+
     setErrorMsg('');
     setName(cleanName);
     setStep(2);
   };
 
   const handleConnect = () => {
-  setIsProcessing(true);
-
-  sessionStorage.setItem(
-    'crt_oauth_pending',
-    String(Date.now())
-  );
-
-  const oauthUrl =
-    `${APP_CONFIG.worker.baseUrl}/start?name=${encodeURIComponent(name)}`;
-
-  window.location.href = oauthUrl;
-};
+    setIsProcessing(true);
+    sessionStorage.setItem('crt_oauth_pending', String(Date.now()));
+    const oauthUrl = `${APP_CONFIG.worker.baseUrl}/start?name=${encodeURIComponent(name)}`;
+    window.location.href = oauthUrl;
+  };
 
   return (
     <div className="flex-1 flex items-center justify-center animate-fade-in w-full h-full min-h-[60vh] relative z-10">
@@ -258,7 +268,6 @@ const Verify = ({ setCurrentView }) => {
             <p className="text-zinc-400 mb-4 text-sm md:text-base">Successfully validated your contributor status. Redirecting...</p>
           </div>
         )}
-
       </div>
     </div>
   );
