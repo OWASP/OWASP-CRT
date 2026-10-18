@@ -1,50 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, Github, ShieldCheck, Zap, X, Maximize } from 'lucide-react';
 import { APP_CONFIG } from '../config';
-
-const LiquidBackground = () => {
-  const blob1 = useRef(null);
-  const blob2 = useRef(null);
-  const blob3 = useRef(null);
-
-  useEffect(() => {
-    let frame = 0;
-    let animationFrameId;
-
-    const animate = () => {
-      frame += 0.015; 
-      
-      const dist1 = 18 + Math.sin(frame) * 5; 
-      const dist2 = 18 + Math.sin(frame + 2) * 5; 
-      const dist3 = 18 + Math.sin(frame + 4) * 5; 
-
-      if (blob1.current) {
-        blob1.current.style.transform = `translate(calc(-50% - ${dist1}vw), calc(-50% - ${dist1}vw)) scale(${1 + Math.sin(frame) * 0.1})`;
-      }
-      if (blob2.current) {
-        blob2.current.style.transform = `translate(calc(-50% + ${dist2}vw), calc(-50% - ${dist2}vw)) scale(${1 + Math.cos(frame) * 0.1})`;
-      }
-      if (blob3.current) {
-        blob3.current.style.transform = `translate(-50%, calc(-50% + ${dist3}vw)) scale(${1 + Math.sin(frame + 1) * 0.1})`;
-      }
-      
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    animate();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, []);
-
-  return (
-    <div className="fixed inset-0 w-full h-full overflow-hidden pointer-events-none -z-20 bg-[#05050A]">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_40%,_#05050A_100%)] z-10 opacity-80"></div>
-      
-      <div ref={blob1} className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-indigo-500 rounded-full blur-[120px] mix-blend-screen opacity-20"></div>
-      <div ref={blob2} className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-fuchsia-500 rounded-full blur-[120px] mix-blend-screen opacity-20"></div>
-      <div ref={blob3} className="absolute top-1/2 left-1/2 w-[45vw] h-[45vw] bg-blue-500 rounded-full blur-[120px] mix-blend-screen opacity-20"></div>
-    </div>
-  );
-};
 
 const Home = ({ setCurrentView }) => {
   const [selectedCert, setSelectedCert] = useState(null);
@@ -52,10 +8,7 @@ const Home = ({ setCurrentView }) => {
   return (
     <div className="flex flex-col items-center w-full max-w-6xl mx-auto pb-24 relative">
       
-      <LiquidBackground />
-
       <section className="flex flex-col items-center text-center pt-12 md:pt-20 min-h-[60vh] justify-center relative z-10">
-
         
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 opacity-0 animate-[slideUp_0.5s_ease-out_0.2s_forwards] leading-tight text-white drop-shadow-2xl">
           Recognizing the <br className="hidden md:block" />
@@ -71,7 +24,7 @@ const Home = ({ setCurrentView }) => {
         <div className="flex flex-wrap justify-center gap-4 opacity-0 animate-[slideUp_0.5s_ease-out_0.4s_forwards]">
           <button 
             onClick={() => setCurrentView('verify')} 
-            className="px-8 py-4 rounded-full bg-white text-black font-bold hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all duration-300 flex items-center gap-2 group shadow-xl"
+            className="cursor-pointer px-8 py-4 rounded-full bg-white text-black font-bold hover:scale-105 hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all duration-300 flex items-center gap-2 group shadow-xl"
           >
             Claim Your Certificate 
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -155,7 +108,7 @@ const Home = ({ setCurrentView }) => {
             onClick={(e) => e.stopPropagation()}
           >
             <button 
-              className="absolute -top-16 right-0 md:-right-12 text-white/50 hover:text-white bg-white/[0.05] hover:bg-white/[0.15] border border-white/10 rounded-full p-3 backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:rotate-90 shadow-xl"
+              className="cursor-pointer absolute -top-16 right-0 md:-right-12 text-white/50 hover:text-white bg-white/[0.05] hover:bg-white/[0.15] border border-white/10 rounded-full p-3 backdrop-blur-xl transition-all duration-300 hover:scale-110 hover:rotate-90 shadow-xl"
               onClick={() => setSelectedCert(null)}
             >
               <X className="w-6 h-6" />
@@ -183,7 +136,7 @@ const LiquidTierCard = ({ title, tierName, image, gradient, description, delay =
     <div className={`absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-br ${gradient} blur-[80px] opacity-[0.12] group-hover:opacity-25 transition-opacity duration-1000 rounded-full pointer-events-none`}></div>
 
     <div 
-      className="relative z-10 w-full max-w-[280px] aspect-[1/1.414] mb-8 transition-all duration-700 cubic-bezier(0.175, 0.885, 0.32, 1.275) transform group-hover:-translate-y-8 group-hover:scale-[1.08] group-hover:rotate-[3deg] cursor-pointer"
+      className="relative z-10 w-full max-w-[280px] aspect-[1/1.414] mb-8 transition-all duration-700 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] group-hover:-translate-y-8 group-hover:scale-[1.08] group-hover:rotate-[3deg] cursor-pointer"
       onClick={onClick}
     >
       <img 
