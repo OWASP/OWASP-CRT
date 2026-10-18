@@ -2,7 +2,6 @@
 
 @theme {
   --font-sans: "Inter", sans-serif;
-  
   --color-background: #000000;
   --color-surface: #0A0A0A;
   --color-surface-hover: #141414;
@@ -19,9 +18,20 @@
     0% { opacity: 0; }
     100% { opacity: 1; }
   }
-  
   @keyframes slideUp {
     0% { opacity: 0; transform: translateY(20px); }
     100% { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  a {
+    cursor: pointer;
+  }
+  
+  button:disabled {
+    cursor: not-allowed;
   }
 }

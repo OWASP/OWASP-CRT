@@ -89,8 +89,8 @@ const App = () => {
       } else if (status === 'success' || status === 'error') {
         setCurrentView('verify');
       } else {
+        setCertId(null);
         const currentRoute = path.replace(basePath, '').replace(/^\/|\/$/g, '');
-
         if (['verify', 'about'].includes(currentRoute)) {
           setCurrentView(currentRoute);
         } else if (currentRoute === '') {
@@ -102,27 +102,29 @@ const App = () => {
     };
 
     handleNavigation();
-
     window.addEventListener('popstate', handleNavigation);
     return () => window.removeEventListener('popstate', handleNavigation);
   }, [basePath]);
 
   const handleSetView = (view) => {
     setCurrentView(view);
-    
+    if (view !== 'certificate') {
+      setCertId(null);
+    }
     const newUrl = view === 'home' ? `${basePath}/` : `${basePath}/${view}`;
     window.history.pushState(null, '', newUrl);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <div className="min-h-[100dvh] w-full relative bg-transparent text-white font-sans flex flex-col">
+    <div className="min-h-[100dvh] w-full relative bg-transparent text-white font-sans flex flex-col overflow-x-hidden">
       
       <LiquidGlobalBackground />
 
       <div className="relative z-10 flex flex-col min-h-[100dvh]">
         <Navbar currentView={currentView} setCurrentView={handleSetView} />
         
-        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12 flex flex-col overflow-hidden">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12 flex flex-col">
           {currentView === 'home' && <Home setCurrentView={handleSetView} />}
           {currentView === 'verify' && <Verify setCurrentView={handleSetView} />}
           {currentView === 'certificate' && <CertificateView certId={certId} setTelemetryData={setTelemetryData} />}
