@@ -1,0 +1,19 @@
+{
+  "id": "107651927",
+  "user": "m4sh-wacker",
+  "real_name": "mshwacker",
+  "tier": "Gold",
+  "score": "0.109939",
+  "last_issued": 1792415293,
+  "stats": {
+    "first_commit_date": "2026-01-30",
+    "merged_commits": "6",
+    "project_count": "2",
+    "lines_added": "62916",
+    "lines_removed": "205",
+    "repositories": [
+      "OWASP/DecodeBox",
+      "OWASP/wstg"
+    ]
+  }
+}
