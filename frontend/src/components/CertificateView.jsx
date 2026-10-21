@@ -43,8 +43,9 @@ const CertificateView = ({ certId, setCurrentView }) => {
     setIsExportingPdf(true);
     try {
       const { jsPDF } = await import('jspdf');
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      pdf.addImage(canvasRef.current, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+      const imgData = canvasRef.current.toDataURL('image/jpeg', 0.95);
+      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'SLOW');
       pdf.save(`OWASP_CRT_Certificate_${certId}.pdf`);
     } catch (err) {
       console.error("Failed to export PDF:", err);
@@ -98,7 +99,18 @@ const CertificateView = ({ certId, setCurrentView }) => {
   const handleCopyLink = async () => {
     const certUrl = `${APP_CONFIG.domain}/?id=${certId}`;
     try {
-      await navigator.clipboard.writeText(certUrl);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(certUrl);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = certUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
