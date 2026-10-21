@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
-import { Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useRef, Suspense, lazy, Component } from 'react';
+import { Loader2, RefreshCw } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
 
@@ -7,6 +7,39 @@ const Verify = lazy(() => import('./components/Verify'));
 const CertificateView = lazy(() => import('./components/CertificateView'));
 const About = lazy(() => import('./components/About'));
 const NotFound = lazy(() => import('./components/NotFound'));
+
+class ChunkErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
+          <div className="bg-white/[0.02] border border-white/[0.08] rounded-3xl p-8 max-w-md w-full backdrop-blur-xl">
+            <h2 className="text-xl font-bold text-white mb-2">Application Updated</h2>
+            <p className="text-zinc-400 text-sm mb-6">
+              A newer version of OWASP-CRT is available or a network error occurred while loading this view.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full py-3 rounded-xl bg-white text-black font-bold text-sm flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" /> Reload Application
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const LiquidGlobalBackground = () => {
   const blob1 = useRef(null);
@@ -107,6 +140,17 @@ const App = () => {
     return () => window.removeEventListener('popstate', handleNavigation);
   }, [basePath]);
 
+  useEffect(() => {
+    const titles = {
+      home: 'OWASP-CRT | Community Recognition Tool',
+      about: 'About | OWASP-CRT',
+      verify: 'Claim Certificate | OWASP-CRT',
+      certificate: certId ? `Credential CRT-OWASP-${certId} | OWASP-CRT` : 'Credential | OWASP-CRT',
+      '404': 'Page Not Found | OWASP-CRT',
+    };
+    document.title = titles[currentView] || 'OWASP-CRT';
+  }, [currentView, certId]);
+
   const handleSetView = (view) => {
     setCurrentView(view);
     if (view !== 'certificate') {
@@ -134,23 +178,25 @@ const App = () => {
         <Navbar currentView={currentView} setCurrentView={handleSetView} />
 
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 md:py-12 flex flex-col">
-          <Suspense
-            fallback={
-              <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-              </div>
-            }
-          >
-            {currentView === 'home' && (
-              <Home setCurrentView={handleSetView} onLookupCertificate={handleViewCertificate} />
-            )}
-            {currentView === 'verify' && <Verify setCurrentView={handleSetView} />}
-            {currentView === 'certificate' && (
-              <CertificateView certId={certId} setCurrentView={handleSetView} />
-            )}
-            {currentView === 'about' && <About />}
-            {currentView === '404' && <NotFound setCurrentView={handleSetView} />}
-          </Suspense>
+          <ChunkErrorBoundary>
+            <Suspense
+              fallback={
+                <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+                  <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+                </div>
+              }
+            >
+              {currentView === 'home' && (
+                <Home setCurrentView={handleSetView} onLookupCertificate={handleViewCertificate} />
+              )}
+              {currentView === 'verify' && <Verify setCurrentView={handleSetView} />}
+              {currentView === 'certificate' && (
+                <CertificateView certId={certId} setCurrentView={handleSetView} />
+              )}
+              {currentView === 'about' && <About />}
+              {currentView === '404' && <NotFound setCurrentView={handleSetView} />}
+            </Suspense>
+          </ChunkErrorBoundary>
         </main>
 
         <footer className="py-6 text-center text-xs text-zinc-500 border-t border-white/[0.05] mt-auto backdrop-blur-md">

@@ -22,7 +22,7 @@ const PROJECT_LEADERS_DATA = [
     id: 2,
     name: "Fatemeh Zahedi",
     role: "Project Leader",
-    github: "dylanzahedi", 
+    github: "dylanzahedi",
     icon: Users,
     theme: {
       gradient: "from-fuchsia-500 to-pink-600",
@@ -37,7 +37,7 @@ const PROJECT_LEADERS_DATA = [
     id: 3,
     name: "Hamidreza Abedi Nasab",
     role: "Design Lead",
-    github: "Ham1dRz", 
+    github: "Ham1dRz",
     icon: PenTool,
     theme: {
       gradient: "from-emerald-400 to-teal-600",
@@ -52,18 +52,25 @@ const PROJECT_LEADERS_DATA = [
 
 const getGithubUrl = (value) => {
   const raw = String(value || '').trim();
-
   if (!raw) return null;
-
   if (/^https:\/\/github\.com\/[A-Za-z0-9-]+\/?$/.test(raw)) {
     return raw.replace(/\/$/, '');
   }
-
   if (/^[A-Za-z0-9-]+$/.test(raw)) {
     return `https://github.com/${raw}`;
   }
-
   return null;
+};
+
+const getSafeExternalUrl = (url) => {
+  const raw = String(url || '').trim();
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    return parsed.protocol === 'https:' ? parsed.href : null;
+  } catch {
+    return null;
+  }
 };
 
 const About = () => {
@@ -73,44 +80,56 @@ const About = () => {
   const [isLoadingSecurityResearchers, setIsLoadingSecurityResearchers] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchHallOfFame = async () => {
       try {
         const rawUrl = `https://raw.githubusercontent.com/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/refs/heads/main/hall-of-fame.json?t=${Date.now()}`;
-        const response = await fetch(rawUrl);
-        
+        const response = await fetch(rawUrl, { signal: controller.signal });
+
         if (response.ok) {
           const data = await response.json();
-          setHallOfFameData(data);
-        } else {
-          console.warn("Hall of Fame data not found or inaccessible.");
+          if (!controller.signal.aborted) {
+            setHallOfFameData(Array.isArray(data) ? data : []);
+          }
         }
       } catch (error) {
-        console.error("Error fetching Hall of Fame data:", error);
+        if (error.name !== 'AbortError') {
+          console.error("Error fetching Hall of Fame data:", error);
+        }
       } finally {
-        setIsLoadingHof(false);
+        if (!controller.signal.aborted) {
+          setIsLoadingHof(false);
+        }
       }
     };
 
     const fetchSecurityResearchers = async () => {
       try {
         const rawUrl = `https://raw.githubusercontent.com/${APP_CONFIG.github.owner}/${APP_CONFIG.github.repo}/refs/heads/main/security-researchers.json?t=${Date.now()}`;
-        const response = await fetch(rawUrl);
+        const response = await fetch(rawUrl, { signal: controller.signal });
 
         if (response.ok) {
           const data = await response.json();
-          setSecurityResearchersData(Array.isArray(data) ? data : []);
-        } else {
-          console.warn("Security researcher data not found or inaccessible.");
+          if (!controller.signal.aborted) {
+            setSecurityResearchersData(Array.isArray(data) ? data : []);
+          }
         }
       } catch (error) {
-        console.error("Error fetching security researcher data:", error);
+        if (error.name !== 'AbortError') {
+          console.error("Error fetching security researcher data:", error);
+        }
       } finally {
-        setIsLoadingSecurityResearchers(false);
+        if (!controller.signal.aborted) {
+          setIsLoadingSecurityResearchers(false);
+        }
       }
     };
 
     fetchHallOfFame();
     fetchSecurityResearchers();
+
+    return () => controller.abort();
   }, []);
 
   return (
@@ -134,7 +153,7 @@ const About = () => {
             <Heart className="w-6 h-6 text-rose-400" /> Our Mission
           </h2>
           <p className="text-zinc-300 leading-relaxed mb-6">
-            Open-source security relies on the relentless effort of thousands of unsung heroes—developers, researchers, and technical writers who architect a safer web. Historically, it has been difficult to officially showcase these vital contributions on professional profiles or resumes.
+            Open-source security relies on the relentless effort of thousands of unsung heroes - developers, researchers, and technical writers who architect a safer web. Historically, it has been difficult to officially showcase these vital contributions on professional profiles or resumes.
           </p>
           <p className="text-zinc-300 leading-relaxed">
             <strong>OWASP-CRT</strong> bridges this gap. By utilizing secure GitHub OAuth integration, our system directly verifies your merged pull requests across official OWASP and GenAI security repositories. We then generate a dynamic, tier-based certificate with a unique QR code, providing undeniable proof of your exact impact on the global security ecosystem.
@@ -149,23 +168,30 @@ const About = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-24 animate-[slideUp_0.5s_ease-out_0.4s_forwards] opacity-0">
-        {PROJECT_LEADERS_DATA.map((leader) => {
-          return (
-            <div key={leader.id} className={`bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] hover:border-white/[0.15] shadow-xl ${leader.theme.hoverShadow} rounded-3xl p-8 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-2 group`}>
-              <a href={`https://github.com/${leader.github}`} target="_blank" rel="noopener noreferrer" className={`w-20 h-20 rounded-full bg-gradient-to-br ${leader.theme.gradient} p-0.5 shadow-lg mb-5 group-hover:scale-110 transition-transform duration-300 block`}>
-                <img 
-                  src={`https://github.com/${leader.github}.png`} 
-                  alt={leader.name} 
-                  className="w-full h-full rounded-full object-cover border-[3px] border-[#08080C] bg-[#08080C]"
-                  onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(leader.name)}&background=08080C&color=${leader.theme.avatarFallbackColor}`; }}
-                />
-              </a>
-              <h4 className={`text-xl font-bold text-white mb-1 ${leader.theme.hoverText} transition-colors`}>{leader.name}</h4>
-              <p className="text-sm text-zinc-400 font-medium mb-4">{leader.role}</p>
-              <div className={`w-8 h-1 rounded-full ${leader.theme.barBg} group-hover:w-16 transition-all duration-300`}></div>
-            </div>
-          );
-        })}
+        {PROJECT_LEADERS_DATA.map((leader) => (
+          <div key={leader.id} className={`bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] hover:border-white/[0.15] shadow-xl ${leader.theme.hoverShadow} rounded-3xl p-8 flex flex-col items-center text-center transition-all duration-300 hover:-translate-y-2 group`}>
+            <a
+              href={`https://github.com/${leader.github}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`w-20 h-20 rounded-full bg-gradient-to-br ${leader.theme.gradient} p-0.5 shadow-lg mb-5 group-hover:scale-110 transition-transform duration-300 block`}
+            >
+              <img 
+                src={`https://github.com/${leader.github}.png`} 
+                alt={leader.name} 
+                loading="lazy"
+                className="w-full h-full rounded-full object-cover border-[3px] border-[#08080C] bg-[#08080C]"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(leader.name)}&background=08080C&color=${leader.theme.avatarFallbackColor}`;
+                }}
+              />
+            </a>
+            <h4 className={`text-xl font-bold text-white mb-1 ${leader.theme.hoverText} transition-colors`}>{leader.name}</h4>
+            <p className="text-sm text-zinc-400 font-medium mb-4">{leader.role}</p>
+            <div className={`w-8 h-1 rounded-full ${leader.theme.barBg} group-hover:w-16 transition-all duration-300`}></div>
+          </div>
+        ))}
       </div>
 
       {/* Security Vulnerability Reporters Section */}
@@ -186,9 +212,8 @@ const About = () => {
         <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto mb-24 animate-[slideUp_0.5s_ease-out_0.6s_forwards] opacity-0">
           {securityResearchersData.map((researcher) => {
             const githubUrl = getGithubUrl(researcher.github);
-            const githubHandle = githubUrl
-              ? githubUrl.replace('https://github.com/', '')
-              : '';
+            const githubHandle = githubUrl ? githubUrl.replace('https://github.com/', '') : '';
+            const safeAdvisoryUrl = getSafeExternalUrl(researcher.advisoryUrl);
 
             return (
               <div key={researcher.id} className="bg-white/[0.02] backdrop-blur-xl border border-emerald-500/10 hover:border-emerald-500/30 shadow-lg rounded-2xl p-6 flex items-center gap-5 transition-all duration-300 hover:bg-emerald-500/[0.04] group">
@@ -203,18 +228,22 @@ const About = () => {
                     <img
                       src={`${githubUrl}.png`}
                       alt={researcher.name}
+                      loading="lazy"
                       className="w-16 h-16 rounded-full object-cover border border-emerald-400/20 bg-[#08080C] transition-transform duration-300 group-hover:scale-105"
-                      onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(researcher.name)}&background=08080C&color=34d399`; }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(researcher.name)}&background=08080C&color=34d399`;
+                      }}
                     />
                   </a>
                 ) : (
                   <img
                     alt={researcher.name}
+                    loading="lazy"
                     className="w-16 h-16 shrink-0 rounded-full object-cover border border-emerald-400/20 bg-[#08080C]"
                     src={`https://ui-avatars.com/api/?name=${encodeURIComponent(researcher.name)}&background=08080C&color=34d399`}
                   />
                 )}
-
                 <div className="flex-1 min-w-0">
                   <h4 className="text-lg font-bold text-white truncate group-hover:text-emerald-300 transition-colors">{researcher.name}</h4>
                   {githubUrl && (
@@ -227,15 +256,17 @@ const About = () => {
                       <Github className="w-3 h-3" /> @{githubHandle}
                     </a>
                   )}
-                  <a
-                    href={researcher.advisoryUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 w-fit flex items-center gap-1.5 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
-                  >
-                    View security advisory <span className="font-mono text-xs text-emerald-500/80">{researcher.advisoryId}</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                  {safeAdvisoryUrl && (
+                    <a
+                      href={safeAdvisoryUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 w-fit flex items-center gap-1.5 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+                    >
+                      View security advisory <span className="font-mono text-xs text-emerald-500/80">{researcher.advisoryId}</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  )}
                 </div>
               </div>
             );
@@ -264,24 +295,22 @@ const About = () => {
       ) : hallOfFameData.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-16 animate-[slideUp_0.5s_ease-out_0.8s_forwards] opacity-0">
           {hallOfFameData.map((user) => {
-        const githubUrl = getGithubUrl(user.github);
-        const githubHandle = githubUrl
-          ? githubUrl.replace('https://github.com/', '')
-          : '';
-      
-        const displayName =
-          !user.name || user.name.toLowerCase() === 'null'
-            ? githubHandle || 'Contributor'
-            : user.name;
+            const githubUrl = getGithubUrl(user.github);
+            const githubHandle = githubUrl ? githubUrl.replace('https://github.com/', '') : '';
+            const displayName = !user.name || user.name.toLowerCase() === 'null' ? githubHandle || 'Contributor' : user.name;
 
             return (
               <div key={user.id} className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] hover:border-white/[0.12] shadow-lg rounded-2xl p-5 flex items-center gap-5 transition-all duration-300 hover:bg-white/[0.04] group">
-                <div className="relative">
+                <div className="relative shrink-0">
                   <img 
-                    src={githubUrl ? `${githubUrl}.png` : undefined}
+                    src={githubUrl ? `${githubUrl}.png` : `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1a1a2e&color=fff`}
                     alt={displayName} 
+                    loading="lazy"
                     className="w-14 h-14 rounded-full object-cover border border-white/10 bg-[#08080C]"
-                    onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1a1a2e&color=fff`; }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1a1a2e&color=fff`;
+                    }}
                   />
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center border-2 border-[#08080C] bg-yellow-500/10 border-yellow-500/30">
                     <Star className="w-3 h-3 text-yellow-400" />
@@ -295,13 +324,12 @@ const About = () => {
                       href={githubUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-zinc-400 hover:text-white transition-colors flex items-center gap-1 mt-0.5"
+                      className="text-xs text-zinc-400 hover:text-white transition-colors inline-flex items-center gap-1 mt-0.5"
                     >
                       <Github className="w-3 h-3" /> @{githubHandle}
                     </a>
                   )}
                 </div>
-                
               </div>
             );
           })}
@@ -315,7 +343,7 @@ const About = () => {
       {/* Open Source Call to Action */}
       <div className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] shadow-lg rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 animate-[slideUp_0.5s_ease-out_0.9s_forwards] opacity-0 hover:border-white/[0.1] transition-colors">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-white/[0.05] flex items-center justify-center border border-white/[0.1]">
+          <div className="w-12 h-12 rounded-full bg-white/[0.05] flex items-center justify-center border border-white/[0.1] shrink-0">
             <Code2 className="w-6 h-6 text-zinc-300" />
           </div>
           <div>

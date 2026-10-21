@@ -2,14 +2,26 @@ import React from 'react';
 import { Award } from 'lucide-react';
 
 const Navbar = ({ currentView, setCurrentView }) => {
+  const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+  const handleNavClick = (e, view) => {
+    // Allow browser default behavior for new-tab shortcuts (Cmd/Ctrl/Shift/Middle click)
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+      return;
+    }
+    e.preventDefault();
+    setCurrentView(view);
+  };
+
   return (
     <nav className="w-full border-b border-white/[0.05] bg-[#05050A]/40 backdrop-blur-2xl sticky top-0 z-50 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         
         {/* Logo Section */}
-        <div 
-          className="flex items-center gap-2 sm:gap-3 cursor-pointer shrink-0 transition-opacity duration-200 hover:opacity-80" 
-          onClick={() => setCurrentView('home')}
+        <a
+          href={`${basePath}/`}
+          onClick={(e) => handleNavClick(e, 'home')}
+          className="flex items-center gap-2 sm:gap-3 cursor-pointer shrink-0 transition-opacity duration-200 hover:opacity-80"
         >
           <div className="text-white shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 262.91 245.57" fill="currentColor" className="w-5 h-5 sm:w-7 sm:h-7">
@@ -17,32 +29,38 @@ const Navbar = ({ currentView, setCurrentView }) => {
             </svg>
           </div>
           <span className="font-bold tracking-tight text-white text-sm sm:text-lg truncate">OWASP-CRT</span>
-        </div>
+        </a>
         
         {/* Navigation Links & Action Button */}
         <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
-          <button 
-            onClick={() => setCurrentView('home')} 
+          <a
+            href={`${basePath}/`}
+            onClick={(e) => handleNavClick(e, 'home')}
+            aria-current={currentView === 'home' ? 'page' : undefined}
             className={`cursor-pointer text-[11px] sm:text-sm font-medium transition-colors ${currentView === 'home' ? 'text-white' : 'text-zinc-400 hover:text-white'}`}
           >
             Overview
-          </button>
+          </a>
           
-          <button 
-            onClick={() => setCurrentView('about')} 
+          <a
+            href={`${basePath}/about`}
+            onClick={(e) => handleNavClick(e, 'about')}
+            aria-current={currentView === 'about' ? 'page' : undefined}
             className={`cursor-pointer text-[11px] sm:text-sm font-medium transition-colors ${currentView === 'about' ? 'text-white' : 'text-zinc-400 hover:text-white'}`}
           >
             About
-          </button>
+          </a>
           
-          <button 
-            onClick={() => setCurrentView('verify')} 
+          <a
+            href={`${basePath}/verify`}
+            onClick={(e) => handleNavClick(e, 'verify')}
+            aria-current={currentView === 'verify' ? 'page' : undefined}
             className="cursor-pointer group relative px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-bold text-black transition-all duration-300 rounded-full bg-white/90 hover:bg-white shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] flex items-center gap-1.5 sm:gap-2 hover:-translate-y-0.5 whitespace-nowrap"
           >
             <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 group-hover:text-indigo-800 transition-colors" />
             <span className="hidden sm:inline">Claim Certificate</span>
             <span className="inline sm:hidden">Claim</span>
-          </button>
+          </a>
         </div>
 
       </div>
