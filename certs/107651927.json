@@ -3,14 +3,14 @@
   "user": "m4sh-wacker",
   "real_name": "Mohammad-H Sadeghian",
   "tier": "Gold",
-  "score": "0.112560",
-  "last_issued": 1792562005,
+  "score": "0.118925",
+  "last_issued": 1794737358,
   "stats": {
     "first_commit_date": "2026-01-30",
-    "merged_commits": "16",
+    "merged_commits": "31",
     "project_count": "2",
-    "lines_added": "63251",
-    "lines_removed": "264",
+    "lines_added": "64905",
+    "lines_removed": "500",
     "repositories": [
       "OWASP/wstg",
       "OWASP/DecodeBox"
