@@ -1,0 +1,18 @@
+{
+  "id": "93397342",
+  "user": "Alfa-Dev404",
+  "real_name": "Vishal Paswan",
+  "tier": "Silver",
+  "score": "0.001144",
+  "last_issued": 1794943188,
+  "stats": {
+    "first_commit_date": "2026-09-22",
+    "merged_commits": "3",
+    "project_count": "1",
+    "lines_added": "263",
+    "lines_removed": "43",
+    "repositories": [
+      "OWASP/Nettacker"
+    ]
+  }
+}
