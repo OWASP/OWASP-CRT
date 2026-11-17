@@ -1,0 +1,18 @@
+{
+  "id": "218288672",
+  "user": "hiralmodi14",
+  "real_name": "Hiral Modi",
+  "tier": "Silver",
+  "score": "0.000850",
+  "last_issued": 1794926887,
+  "stats": {
+    "first_commit_date": "2026-10-26",
+    "merged_commits": "4",
+    "project_count": "1",
+    "lines_added": "18",
+    "lines_removed": "24",
+    "repositories": [
+      "OWASP/BLT"
+    ]
+  }
+}
