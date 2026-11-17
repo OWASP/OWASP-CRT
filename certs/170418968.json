@@ -1,0 +1,18 @@
+{
+  "id": "170418968",
+  "user": "hrinkar01",
+  "real_name": "Hrinkar Bothra",
+  "tier": "Silver",
+  "score": "0.003001",
+  "last_issued": 1794924338,
+  "stats": {
+    "first_commit_date": "2026-10-22",
+    "merged_commits": "7",
+    "project_count": "1",
+    "lines_added": "497",
+    "lines_removed": "274",
+    "repositories": [
+      "OWASP/BLT"
+    ]
+  }
+}
