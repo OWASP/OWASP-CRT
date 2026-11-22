@@ -1,0 +1,19 @@
+{
+  "id": "141923179",
+  "user": "aryanghai12",
+  "real_name": "Aryan Ghai",
+  "tier": "Gold",
+  "score": "0.086899",
+  "last_issued": 1795331590,
+  "stats": {
+    "first_commit_date": "2026-02-09",
+    "merged_commits": "82",
+    "project_count": "2",
+    "lines_added": "29122",
+    "lines_removed": "7011",
+    "repositories": [
+      "OWASP/Nest",
+      "OWASP/BLT"
+    ]
+  }
+}
